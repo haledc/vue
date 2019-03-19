@@ -5,13 +5,7 @@ import { resolveConstructorOptions } from 'core/instance/init'
 import { queueActivatedComponent } from 'core/observer/scheduler'
 import { createFunctionalComponent } from './create-functional-component'
 
-import {
-  warn,
-  isDef,
-  isUndef,
-  isTrue,
-  isObject
-} from '../util/index'
+import { warn, isDef, isUndef, isTrue, isObject } from '../util/index'
 
 import {
   resolveAsyncComponent,
@@ -33,8 +27,9 @@ import {
 } from 'weex/runtime/recycle-list/render-component-template'
 
 // inline hooks to be invoked on component VNodes during patch
+// ! 组件钩子
 const componentVNodeHooks = {
-  init (vnode: VNodeWithData, hydrating: boolean): ?boolean {
+  init(vnode: VNodeWithData, hydrating: boolean): ?boolean {
     if (
       vnode.componentInstance &&
       !vnode.componentInstance._isDestroyed &&
@@ -44,17 +39,21 @@ const componentVNodeHooks = {
       const mountedNode: any = vnode // work around flow
       componentVNodeHooks.prepatch(mountedNode, mountedNode)
     } else {
-      const child = vnode.componentInstance = createComponentInstanceForVnode(
+      // ! 创建组件的 Vue 实例
+      const child = (vnode.componentInstance = createComponentInstanceForVnode(
         vnode,
         activeInstance
-      )
+      ))
+      // ! 挂载组件实例 （ hydrating 判断是否服务端渲染） => child.$mount(undefined, false)
       child.$mount(hydrating ? vnode.elm : undefined, hydrating)
     }
   },
 
-  prepatch (oldVnode: MountedComponentVNode, vnode: MountedComponentVNode) {
-    const options = vnode.componentOptions
-    const child = vnode.componentInstance = oldVnode.componentInstance
+  prepatch(oldVnode: MountedComponentVNode, vnode: MountedComponentVNode) {
+    const options = vnode.componentOptions // ! 获取组件配置
+    const child = (vnode.componentInstance = oldVnode.componentInstance) // ! 获取组件实例
+
+    // ! 更新子组件
     updateChildComponent(
       child,
       options.propsData, // updated props
@@ -64,11 +63,12 @@ const componentVNodeHooks = {
     )
   },
 
-  insert (vnode: MountedComponentVNode) {
+  // ! 插入方法
+  insert(vnode: MountedComponentVNode) {
     const { context, componentInstance } = vnode
     if (!componentInstance._isMounted) {
       componentInstance._isMounted = true
-      callHook(componentInstance, 'mounted')
+      callHook(componentInstance, 'mounted') // ! 调用 mounted 钩子
     }
     if (vnode.data.keepAlive) {
       if (context._isMounted) {
@@ -84,11 +84,13 @@ const componentVNodeHooks = {
     }
   },
 
-  destroy (vnode: MountedComponentVNode) {
+  // ! 销毁
+  destroy(vnode: MountedComponentVNode) {
     const { componentInstance } = vnode
     if (!componentInstance._isDestroyed) {
+      // ! 组件不是 keepAlive 时
       if (!vnode.data.keepAlive) {
-        componentInstance.$destroy()
+        componentInstance.$destroy() // ! 执行组件销毁方法
       } else {
         deactivateChildComponent(componentInstance, true /* direct */)
       }
@@ -98,7 +100,8 @@ const componentVNodeHooks = {
 
 const hooksToMerge = Object.keys(componentVNodeHooks)
 
-export function createComponent (
+// ! 创建组件方法
+export function createComponent(
   Ctor: Class<Component> | Function | Object | void,
   data: ?VNodeData,
   context: Component,
@@ -112,6 +115,7 @@ export function createComponent (
   const baseCtor = context.$options._base
 
   // plain options object: turn it into a constructor
+  // ! ① 构造子类构造函数 使用 extend 扩展
   if (isObject(Ctor)) {
     Ctor = baseCtor.extend(Ctor)
   }
@@ -126,21 +130,17 @@ export function createComponent (
   }
 
   // async component
+  // ! 异步组件函数
   let asyncFactory
   if (isUndef(Ctor.cid)) {
     asyncFactory = Ctor
     Ctor = resolveAsyncComponent(asyncFactory, baseCtor)
+    // ! 第一次返回一般为 undefined，后面根据情况，走正常的 render 和 patch
     if (Ctor === undefined) {
       // return a placeholder node for async component, which is rendered
       // as a comment node but preserves all the raw information for the node.
       // the information will be used for async server-rendering and hydration.
-      return createAsyncPlaceholder(
-        asyncFactory,
-        data,
-        context,
-        children,
-        tag
-      )
+      return createAsyncPlaceholder(asyncFactory, data, context, children, tag)
     }
   }
 
@@ -183,13 +183,19 @@ export function createComponent (
   }
 
   // install component management hooks onto the placeholder node
+  // ! ② 安装组件钩子函数
   installComponentHooks(data)
 
   // return a placeholder vnode
   const name = Ctor.options.name || tag
+  // ! ③ 实例化 VNode
   const vnode = new VNode(
     `vue-component-${Ctor.cid}${name ? `-${name}` : ''}`,
-    data, undefined, undefined, undefined, context,
+    data,
+    undefined, // ! 组件没有 children 元素
+    undefined,
+    undefined,
+    context,
     { Ctor, propsData, listeners, tag, children },
     asyncFactory
   )
@@ -205,14 +211,16 @@ export function createComponent (
   return vnode
 }
 
-export function createComponentInstanceForVnode (
+// ! 创建组件的 Vue 实例方法
+export function createComponentInstanceForVnode(
   vnode: any, // we know it's MountedComponentVNode but flow doesn't
-  parent: any, // activeInstance in lifecycle state
+  parent: any // activeInstance in lifecycle state
 ): Component {
+  // ! 组件间合并配置
   const options: InternalComponentOptions = {
-    _isComponent: true,
+    _isComponent: true, // ! 是否是组件
     _parentVnode: vnode,
-    parent
+    parent // ! 当前激活的组件实例
   }
   // check inline-template render functions
   const inlineTemplate = vnode.data.inlineTemplate
@@ -220,22 +228,25 @@ export function createComponentInstanceForVnode (
     options.render = inlineTemplate.render
     options.staticRenderFns = inlineTemplate.staticRenderFns
   }
+
+  // ! 使用 new 创建实例 相当于 new Sub(options)
   return new vnode.componentOptions.Ctor(options)
 }
 
-function installComponentHooks (data: VNodeData) {
+function installComponentHooks(data: VNodeData) {
   const hooks = data.hook || (data.hook = {})
   for (let i = 0; i < hooksToMerge.length; i++) {
     const key = hooksToMerge[i]
     const existing = hooks[key]
     const toMerge = componentVNodeHooks[key]
     if (existing !== toMerge && !(existing && existing._merged)) {
-      hooks[key] = existing ? mergeHook(toMerge, existing) : toMerge
+      hooks[key] = existing ? mergeHook(toMerge, existing) : toMerge // ! 钩子存在，合并钩子
     }
   }
 }
 
-function mergeHook (f1: any, f2: any): Function {
+// ! 合并钩子，依次执行
+function mergeHook(f1: any, f2: any): Function {
   const merged = (a, b) => {
     // flow complains about extra args which is why we use any
     f1(a, b)
@@ -247,7 +258,7 @@ function mergeHook (f1: any, f2: any): Function {
 
 // transform component v-model info (value and callback) into
 // prop and event handler respectively.
-function transformModel (options, data: any) {
+function transformModel(options, data: any) {
   const prop = (options.model && options.model.prop) || 'value'
   const event = (options.model && options.model.event) || 'input'
   ;(data.attrs || (data.attrs = {}))[prop] = data.model.value

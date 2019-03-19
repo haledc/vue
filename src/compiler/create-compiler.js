@@ -4,22 +4,25 @@ import { extend } from 'shared/util'
 import { detectErrors } from './error-detector'
 import { createCompileToFunctionFn } from './to-function'
 
-export function createCompilerCreator (baseCompile: Function): Function {
-  return function createCompiler (baseOptions: CompilerOptions) {
-    function compile (
+export function createCompilerCreator(baseCompile: Function): Function {
+  return function createCompiler(baseOptions: CompilerOptions) {
+    // ! 编译的方法
+    function compile(
       template: string,
       options?: CompilerOptions
     ): CompiledResult {
       const finalOptions = Object.create(baseOptions)
       const errors = []
       const tips = []
-
       let warn = (msg, range, tip) => {
-        (tip ? tips : errors).push(msg)
+        ;(tip ? tips : errors).push(msg)
       }
 
       if (options) {
-        if (process.env.NODE_ENV !== 'production' && options.outputSourceRange) {
+        if (
+          process.env.NODE_ENV !== 'production' &&
+          options.outputSourceRange
+        ) {
           // $flow-disable-line
           const leadingSpaceLength = template.match(/^\s*/)[0].length
 
@@ -33,13 +36,14 @@ export function createCompilerCreator (baseCompile: Function): Function {
                 data.end = range.end + leadingSpaceLength
               }
             }
-            (tip ? tips : errors).push(data)
+            ;(tip ? tips : errors).push(data)
           }
         }
         // merge custom modules
         if (options.modules) {
-          finalOptions.modules =
-            (baseOptions.modules || []).concat(options.modules)
+          finalOptions.modules = (baseOptions.modules || []).concat(
+            options.modules
+          )
         }
         // merge custom directives
         if (options.directives) {
@@ -58,7 +62,7 @@ export function createCompilerCreator (baseCompile: Function): Function {
 
       finalOptions.warn = warn
 
-      const compiled = baseCompile(template.trim(), finalOptions)
+      const compiled = baseCompile(template.trim(), finalOptions) // ! 基础编译
       if (process.env.NODE_ENV !== 'production') {
         detectErrors(compiled.ast, warn)
       }

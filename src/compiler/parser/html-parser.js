@@ -14,6 +14,7 @@ import { isNonPhrasingTag } from 'web/compiler/util'
 import { unicodeRegExp } from 'core/util/lang'
 
 // Regular Expressions for parsing tags and attributes
+// ! 匹配的正则表达式
 const attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/
 const dynamicArgAttribute = /^\s*((?:v-[\w-]+:|@|:|#)\[[^=]+\][^\s"'<>\/=]*)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/
 const ncname = `[a-zA-Z_][\\-\\.0-9_a-zA-Z${unicodeRegExp.source}]*`
@@ -44,14 +45,16 @@ const encodedAttrWithNewLines = /&(?:lt|gt|quot|amp|#39|#10|#9);/g
 
 // #5992
 const isIgnoreNewlineTag = makeMap('pre,textarea', true)
-const shouldIgnoreFirstNewline = (tag, html) => tag && isIgnoreNewlineTag(tag) && html[0] === '\n'
+const shouldIgnoreFirstNewline = (tag, html) =>
+  tag && isIgnoreNewlineTag(tag) && html[0] === '\n'
 
-function decodeAttr (value, shouldDecodeNewlines) {
+function decodeAttr(value, shouldDecodeNewlines) {
   const re = shouldDecodeNewlines ? encodedAttrWithNewLines : encodedAttr
   return value.replace(re, match => decodingMap[match])
 }
 
-export function parseHTML (html, options) {
+// ! 解析 HTML 模板的具体方法
+export function parseHTML(html, options) {
   const stack = []
   const expectHTML = options.expectHTML
   const isUnaryTag = options.isUnaryTag || no
@@ -65,12 +68,17 @@ export function parseHTML (html, options) {
       let textEnd = html.indexOf('<')
       if (textEnd === 0) {
         // Comment:
+        // ! 注释节点，只做前进
         if (comment.test(html)) {
           const commentEnd = html.indexOf('-->')
 
           if (commentEnd >= 0) {
             if (options.shouldKeepComment) {
-              options.comment(html.substring(4, commentEnd), index, index + commentEnd + 3)
+              options.comment(
+                html.substring(4, commentEnd),
+                index,
+                index + commentEnd + 3
+              )
             }
             advance(commentEnd + 3)
             continue
@@ -88,22 +96,25 @@ export function parseHTML (html, options) {
         }
 
         // Doctype:
+        // ! 文档类型节点，只做前进
         const doctypeMatch = html.match(doctype)
         if (doctypeMatch) {
-          advance(doctypeMatch[0].length)
+          advance(doctypeMatch[0].length) // ! 前进自身长度的距离
           continue
         }
 
         // End tag:
+        // ! 闭合标签
         const endTagMatch = html.match(endTag)
         if (endTagMatch) {
           const curIndex = index
-          advance(endTagMatch[0].length)
+          advance(endTagMatch[0].length) // ! 前进到闭合标签末尾
           parseEndTag(endTagMatch[1], curIndex, index)
           continue
         }
 
         // Start tag:
+        // ! 开始标签
         const startTagMatch = parseStartTag()
         if (startTagMatch) {
           handleStartTag(startTagMatch)
@@ -114,7 +125,9 @@ export function parseHTML (html, options) {
         }
       }
 
+      // ! 文本
       let text, rest, next
+      // ! 是否有文本
       if (textEnd >= 0) {
         rest = html.slice(textEnd)
         while (
@@ -124,6 +137,7 @@ export function parseHTML (html, options) {
           !conditionalComment.test(rest)
         ) {
           // < in plain text, be forgiving and treat it as text
+          // ! < 是纯文本字符
           next = rest.indexOf('<', 1)
           if (next < 0) break
           textEnd += next
@@ -146,8 +160,13 @@ export function parseHTML (html, options) {
     } else {
       let endTagLength = 0
       const stackedTag = lastTag.toLowerCase()
-      const reStackedTag = reCache[stackedTag] || (reCache[stackedTag] = new RegExp('([\\s\\S]*?)(</' + stackedTag + '[^>]*>)', 'i'))
-      const rest = html.replace(reStackedTag, function (all, text, endTag) {
+      const reStackedTag =
+        reCache[stackedTag] ||
+        (reCache[stackedTag] = new RegExp(
+          '([\\s\\S]*?)(</' + stackedTag + '[^>]*>)',
+          'i'
+        ))
+      const rest = html.replace(reStackedTag, function(all, text, endTag) {
         endTagLength = endTag.length
         if (!isPlainTextElement(stackedTag) && stackedTag !== 'noscript') {
           text = text
@@ -169,8 +188,14 @@ export function parseHTML (html, options) {
 
     if (html === last) {
       options.chars && options.chars(html)
-      if (process.env.NODE_ENV !== 'production' && !stack.length && options.warn) {
-        options.warn(`Mal-formatted tag at end of template: "${html}"`, { start: index + html.length })
+      if (
+        process.env.NODE_ENV !== 'production' &&
+        !stack.length &&
+        options.warn
+      ) {
+        options.warn(`Mal-formatted tag at end of template: "${html}"`, {
+          start: index + html.length
+        })
       }
       break
     }
@@ -179,12 +204,14 @@ export function parseHTML (html, options) {
   // Clean up any remaining tags
   parseEndTag()
 
-  function advance (n) {
+  // ! 前进的方法
+  function advance(n) {
     index += n
     html = html.substring(n)
   }
 
-  function parseStartTag () {
+  // ! 解析开始标签的方法
+  function parseStartTag() {
     const start = html.match(startTagOpen)
     if (start) {
       const match = {
@@ -194,11 +221,14 @@ export function parseHTML (html, options) {
       }
       advance(start[0].length)
       let end, attr
-      while (!(end = html.match(startTagClose)) && (attr = html.match(dynamicArgAttribute) || html.match(attribute))) {
+      while (
+        !(end = html.match(startTagClose)) &&
+        (attr = html.match(dynamicArgAttribute) || html.match(attribute))
+      ) {
         attr.start = index
         advance(attr[0].length)
         attr.end = index
-        match.attrs.push(attr)
+        match.attrs.push(attr) // ! 把获取到的标签属性添加进来
       }
       if (end) {
         match.unarySlash = end[1]
@@ -209,7 +239,8 @@ export function parseHTML (html, options) {
     }
   }
 
-  function handleStartTag (match) {
+  // ! 处理开始标签的方法
+  function handleStartTag(match) {
     const tagName = match.tagName
     const unarySlash = match.unarySlash
 
@@ -222,16 +253,17 @@ export function parseHTML (html, options) {
       }
     }
 
-    const unary = isUnaryTag(tagName) || !!unarySlash
+    const unary = isUnaryTag(tagName) || !!unarySlash // ! 一元标签 <img>、<br/>
 
     const l = match.attrs.length
     const attrs = new Array(l)
     for (let i = 0; i < l; i++) {
       const args = match.attrs[i]
       const value = args[3] || args[4] || args[5] || ''
-      const shouldDecodeNewlines = tagName === 'a' && args[1] === 'href'
-        ? options.shouldDecodeNewlinesForHref
-        : options.shouldDecodeNewlines
+      const shouldDecodeNewlines =
+        tagName === 'a' && args[1] === 'href'
+          ? options.shouldDecodeNewlinesForHref
+          : options.shouldDecodeNewlines
       attrs[i] = {
         name: args[1],
         value: decodeAttr(value, shouldDecodeNewlines)
@@ -242,9 +274,17 @@ export function parseHTML (html, options) {
       }
     }
 
+    // ! 不是一元标签
     if (!unary) {
-      stack.push({ tag: tagName, lowerCasedTag: tagName.toLowerCase(), attrs: attrs, start: match.start, end: match.end })
-      lastTag = tagName
+      // ! 压入栈
+      stack.push({
+        tag: tagName,
+        lowerCasedTag: tagName.toLowerCase(),
+        attrs: attrs,
+        start: match.start,
+        end: match.end
+      })
+      lastTag = tagName // ! 赋值
     }
 
     if (options.start) {
@@ -252,7 +292,8 @@ export function parseHTML (html, options) {
     }
   }
 
-  function parseEndTag (tagName, start, end) {
+  // ! 解析闭合标签
+  function parseEndTag(tagName, start, end) {
     let pos, lowerCasedTagName
     if (start == null) start = index
     if (end == null) end = index
@@ -273,14 +314,15 @@ export function parseHTML (html, options) {
     if (pos >= 0) {
       // Close all the open elements, up the stack
       for (let i = stack.length - 1; i >= pos; i--) {
-        if (process.env.NODE_ENV !== 'production' &&
+        if (
+          process.env.NODE_ENV !== 'production' &&
           (i > pos || !tagName) &&
           options.warn
         ) {
-          options.warn(
-            `tag <${stack[i].tag}> has no matching end tag.`,
-            { start: stack[i].start, end: stack[i].end }
-          )
+          options.warn(`tag <${stack[i].tag}> has no matching end tag.`, {
+            start: stack[i].start,
+            end: stack[i].end
+          })
         }
         if (options.end) {
           options.end(stack[i].tag, start, end)

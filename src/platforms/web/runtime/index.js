@@ -30,11 +30,12 @@ Vue.config.isUnknownElement = isUnknownElement
 extend(Vue.options.directives, platformDirectives)
 extend(Vue.options.components, platformComponents)
 
-// install platform patch function
+// install platform patch functionll
+// ! 不同的平台，不同的 patch 方法
 Vue.prototype.__patch__ = inBrowser ? patch : noop
 
 // public mount method
-Vue.prototype.$mount = function (
+Vue.prototype.$mount = function(
   el?: string | Element,
   hydrating?: boolean
 ): Component {
@@ -55,19 +56,20 @@ if (inBrowser) {
       ) {
         console[console.info ? 'info' : 'log'](
           'Download the Vue Devtools extension for a better development experience:\n' +
-          'https://github.com/vuejs/vue-devtools'
+            'https://github.com/vuejs/vue-devtools'
         )
       }
     }
-    if (process.env.NODE_ENV !== 'production' &&
+    if (
+      process.env.NODE_ENV !== 'production' &&
       process.env.NODE_ENV !== 'test' &&
       config.productionTip !== false &&
       typeof console !== 'undefined'
     ) {
       console[console.info ? 'info' : 'log'](
         `You are running Vue in development mode.\n` +
-        `Make sure to turn on production mode when deploying for production.\n` +
-        `See more tips at https://vuejs.org/guide/deployment.html`
+          `Make sure to turn on production mode when deploying for production.\n` +
+          `See more tips at https://vuejs.org/guide/deployment.html`
       )
     }
   }, 0)

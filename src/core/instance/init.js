@@ -12,8 +12,8 @@ import { extend, mergeOptions, formatComponentName } from '../util/index'
 
 let uid = 0
 
-export function initMixin (Vue: Class<Component>) {
-  Vue.prototype._init = function (options?: Object) {
+export function initMixin(Vue: Class<Component>) {
+  Vue.prototype._init = function(options?: Object) {
     const vm: Component = this
     // a uid
     vm._uid = uid++
@@ -49,14 +49,14 @@ export function initMixin (Vue: Class<Component>) {
     }
     // expose real self
     vm._self = vm
-    initLifecycle(vm)
-    initEvents(vm)
-    initRender(vm)
-    callHook(vm, 'beforeCreate')
-    initInjections(vm) // resolve injections before data/props
-    initState(vm)
-    initProvide(vm) // resolve provide after data/props
-    callHook(vm, 'created')
+    initLifecycle(vm) // ! 初始化生命周期
+    initEvents(vm) // ! 初始化事件
+    initRender(vm) // ! 初始化渲染
+    callHook(vm, 'beforeCreate') // ! 调用 beforeCreate 钩子
+    initInjections(vm) // ! resolve injections before data/props 初始化 Injections，在 state 之前
+    initState(vm) // ! 初始化状态 包括 props data computed methods watch
+    initProvide(vm) // ! resolve provide after data/props 初始化 Provide，在 state 之后
+    callHook(vm, 'created') // ! 调用 beforeCreate 钩子
 
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
@@ -65,18 +65,23 @@ export function initMixin (Vue: Class<Component>) {
       measure(`vue ${vm._name} init`, startTag, endTag)
     }
 
+    // ! 如果有 el，就挂载在该元素上
     if (vm.$options.el) {
       vm.$mount(vm.$options.el)
     }
   }
 }
 
-export function initInternalComponent (vm: Component, options: InternalComponentOptions) {
-  const opts = vm.$options = Object.create(vm.constructor.options)
+export function initInternalComponent(
+  vm: Component,
+  options: InternalComponentOptions
+) {
+  // ! 初始化时合并 options，下同
+  const opts = (vm.$options = Object.create(vm.constructor.options))
   // doing this because it's faster than dynamic enumeration.
   const parentVnode = options._parentVnode
-  opts.parent = options.parent
-  opts._parentVnode = parentVnode
+  opts.parent = options.parent // ! 存储 parent
+  opts._parentVnode = parentVnode // ! 存储 parentVnode
 
   const vnodeComponentOptions = parentVnode.componentOptions
   opts.propsData = vnodeComponentOptions.propsData
@@ -90,7 +95,7 @@ export function initInternalComponent (vm: Component, options: InternalComponent
   }
 }
 
-export function resolveConstructorOptions (Ctor: Class<Component>) {
+export function resolveConstructorOptions(Ctor: Class<Component>) {
   let options = Ctor.options
   if (Ctor.super) {
     const superOptions = resolveConstructorOptions(Ctor.super)
@@ -111,10 +116,10 @@ export function resolveConstructorOptions (Ctor: Class<Component>) {
       }
     }
   }
-  return options
+  return options // ! 返回 options
 }
 
-function resolveModifiedOptions (Ctor: Class<Component>): ?Object {
+function resolveModifiedOptions(Ctor: Class<Component>): ?Object {
   let modified
   const latest = Ctor.options
   const sealed = Ctor.sealedOptions

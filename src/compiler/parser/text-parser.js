@@ -3,7 +3,7 @@
 import { cached } from 'shared/util'
 import { parseFilters } from './filter-parser'
 
-const defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g
+const defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g // ! 插值符 {{}}
 const regexEscapeRE = /[-.*+?^${}()|[\]\/\\]/g
 
 const buildRegex = cached(delimiters => {
@@ -17,7 +17,8 @@ type TextParseResult = {
   tokens: Array<string | { '@binding': string }>
 }
 
-export function parseText (
+// ! 文本解析的方法
+export function parseText(
   text: string,
   delimiters?: [string, string]
 ): TextParseResult | void {
@@ -27,13 +28,13 @@ export function parseText (
   }
   const tokens = []
   const rawTokens = []
-  let lastIndex = tagRE.lastIndex = 0
+  let lastIndex = (tagRE.lastIndex = 0)
   let match, index, tokenValue
   while ((match = tagRE.exec(text))) {
     index = match.index
     // push text token
     if (index > lastIndex) {
-      rawTokens.push(tokenValue = text.slice(lastIndex, index))
+      rawTokens.push((tokenValue = text.slice(lastIndex, index)))
       tokens.push(JSON.stringify(tokenValue))
     }
     // tag token
@@ -43,7 +44,7 @@ export function parseText (
     lastIndex = index + match[0].length
   }
   if (lastIndex < text.length) {
-    rawTokens.push(tokenValue = text.slice(lastIndex))
+    rawTokens.push((tokenValue = text.slice(lastIndex)))
     tokens.push(JSON.stringify(tokenValue))
   }
   return {

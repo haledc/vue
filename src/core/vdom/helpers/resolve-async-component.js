@@ -15,32 +15,30 @@ import {
 import { createEmptyVNode } from 'core/vdom/vnode'
 import { currentRenderingInstance } from 'core/instance/render'
 
-function ensureCtor (comp: any, base) {
-  if (
-    comp.__esModule ||
-    (hasSymbol && comp[Symbol.toStringTag] === 'Module')
-  ) {
+// ! 确认构造器
+function ensureCtor(comp: any, base) {
+  if (comp.__esModule || (hasSymbol && comp[Symbol.toStringTag] === 'Module')) {
     comp = comp.default
   }
-  return isObject(comp)
-    ? base.extend(comp)
-    : comp
+  // ! 确认构造器是对象还是函数，同步是对象，异步是函数
+  return isObject(comp) ? base.extend(comp) : comp
 }
 
-export function createAsyncPlaceholder (
+export function createAsyncPlaceholder(
   factory: Function,
   data: ?VNodeData,
   context: Component,
   children: ?Array<VNode>,
   tag: ?string
 ): VNode {
-  const node = createEmptyVNode()
-  node.asyncFactory = factory
+  const node = createEmptyVNode() // ! 创建注释节点作占位符
+  node.asyncFactory = factory // ! 赋值给当前节点
   node.asyncMeta = { data, context, children, tag }
-  return node
+  return node // ! 返回当前节点
 }
 
-export function resolveAsyncComponent (
+// ! 解析异步组件的方法
+export function resolveAsyncComponent(
   factory: Function,
   baseCtor: Class<Component>
 ): Class<Component> | void {
@@ -48,6 +46,7 @@ export function resolveAsyncComponent (
     return factory.errorComp
   }
 
+  // ! 异步组件成功时
   if (isDef(factory.resolved)) {
     return factory.resolved
   }
@@ -58,19 +57,21 @@ export function resolveAsyncComponent (
     factory.owners.push(owner)
   }
 
+  // ! 异步组件加载中...
   if (isTrue(factory.loading) && isDef(factory.loadingComp)) {
     return factory.loadingComp
   }
 
   if (owner && !isDef(factory.owners)) {
-    const owners = factory.owners = [owner]
+    const owners = (factory.owners = [owner])
     let sync = true
 
     ;(owner: any).$on('hook:destroyed', () => remove(owners, owner))
 
+    // ! 强制渲染方法，遍历 context，然后调用强制更新
     const forceRender = (renderCompleted: boolean) => {
       for (let i = 0, l = owners.length; i < l; i++) {
-        (owners[i]: any).$forceUpdate()
+        ;(owners[i]: any).$forceUpdate()
       }
 
       if (renderCompleted) {
@@ -78,6 +79,7 @@ export function resolveAsyncComponent (
       }
     }
 
+    // ! 异步组件加载成功方法
     const resolve = once((res: Object | Class<Component>) => {
       // cache resolved
       factory.resolved = ensureCtor(res, baseCtor)
@@ -90,11 +92,13 @@ export function resolveAsyncComponent (
       }
     })
 
+    // ! 异步组件加载失败/超时方法
     const reject = once(reason => {
-      process.env.NODE_ENV !== 'production' && warn(
-        `Failed to resolve async component: ${String(factory)}` +
-        (reason ? `\nReason: ${reason}` : '')
-      )
+      process.env.NODE_ENV !== 'production' &&
+        warn(
+          `Failed to resolve async component: ${String(factory)}` +
+            (reason ? `\nReason: ${reason}` : '')
+        )
       if (isDef(factory.errorComp)) {
         factory.error = true
         forceRender(true)
@@ -110,14 +114,18 @@ export function resolveAsyncComponent (
           res.then(resolve, reject)
         }
       } else if (isPromise(res.component)) {
+        // ! 高级异步组件
         res.component.then(resolve, reject)
 
+        // ! error 组件
         if (isDef(res.error)) {
           factory.errorComp = ensureCtor(res.error, baseCtor)
         }
 
+        // ! loading 组件
         if (isDef(res.loading)) {
           factory.loadingComp = ensureCtor(res.loading, baseCtor)
+          // ! 渲染组件前等待时间
           if (res.delay === 0) {
             factory.loading = true
           } else {
@@ -130,6 +138,7 @@ export function resolveAsyncComponent (
           }
         }
 
+        // ! 最长等待时间
         if (isDef(res.timeout)) {
           setTimeout(() => {
             if (isUndef(factory.resolved)) {
@@ -146,8 +155,6 @@ export function resolveAsyncComponent (
 
     sync = false
     // return in case resolved synchronously
-    return factory.loading
-      ? factory.loadingComp
-      : factory.resolved
+    return factory.loading ? factory.loadingComp : factory.resolved
   }
 }

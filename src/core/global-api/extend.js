@@ -4,7 +4,7 @@ import { ASSET_TYPES } from 'shared/constants'
 import { defineComputed, proxy } from '../instance/state'
 import { extend, mergeOptions, validateComponentName } from '../util/index'
 
-export function initExtend (Vue: GlobalAPI) {
+export function initExtend(Vue: GlobalAPI) {
   /**
    * Each instance constructor, including Vue, has a unique
    * cid. This enables us to create wrapped "child
@@ -16,13 +16,13 @@ export function initExtend (Vue: GlobalAPI) {
   /**
    * Class inheritance
    */
-  Vue.extend = function (extendOptions: Object): Function {
+  Vue.extend = function(extendOptions: Object): Function {
     extendOptions = extendOptions || {}
-    const Super = this
+    const Super = this // ! 主构造器
     const SuperId = Super.cid
-    const cachedCtors = extendOptions._Ctor || (extendOptions._Ctor = {})
+    const cachedCtors = extendOptions._Ctor || (extendOptions._Ctor = {}) // ! 构造器缓存
     if (cachedCtors[SuperId]) {
-      return cachedCtors[SuperId]
+      return cachedCtors[SuperId] // ! 缓存构造器
     }
 
     const name = extendOptions.name || Super.options.name
@@ -30,36 +30,35 @@ export function initExtend (Vue: GlobalAPI) {
       validateComponentName(name)
     }
 
-    const Sub = function VueComponent (options) {
-      this._init(options)
+    // ! 子构造器方法
+    const Sub = function VueComponent(options) {
+      this._init(options) // ! 初始化
     }
-    Sub.prototype = Object.create(Super.prototype)
+    Sub.prototype = Object.create(Super.prototype) // ! 子构造器继承主构造器
     Sub.prototype.constructor = Sub
     Sub.cid = cid++
-    Sub.options = mergeOptions(
-      Super.options,
-      extendOptions
-    )
+    Sub.options = mergeOptions(Super.options, extendOptions) // !合并父实例的选项
     Sub['super'] = Super
 
     // For props and computed properties, we define the proxy getters on
     // the Vue instances at extension time, on the extended prototype. This
     // avoids Object.defineProperty calls for each instance created.
     if (Sub.options.props) {
-      initProps(Sub)
+      initProps(Sub) // ! 初始化 props
     }
     if (Sub.options.computed) {
-      initComputed(Sub)
+      initComputed(Sub) // ! 初始化 computed
     }
 
     // allow further extension/mixin/plugin usage
+    // ! 继承 下同
     Sub.extend = Super.extend
     Sub.mixin = Super.mixin
     Sub.use = Super.use
 
     // create asset registers, so extended classes
     // can have their private assets too.
-    ASSET_TYPES.forEach(function (type) {
+    ASSET_TYPES.forEach(function(type) {
       Sub[type] = Super[type]
     })
     // enable recursive self-lookup
@@ -80,14 +79,14 @@ export function initExtend (Vue: GlobalAPI) {
   }
 }
 
-function initProps (Comp) {
+function initProps(Comp) {
   const props = Comp.options.props
   for (const key in props) {
     proxy(Comp.prototype, `_props`, key)
   }
 }
 
-function initComputed (Comp) {
+function initComputed(Comp) {
   const computed = Comp.options.computed
   for (const key in computed) {
     defineComputed(Comp.prototype, key, computed[key])
