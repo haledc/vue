@@ -1,14 +1,17 @@
 /* @flow */
 
+/**
+ * ! 虚拟 Node 类
+ */
 export default class VNode {
-  tag: string | void // ! 标签名
-  data: VNodeData | void // ! 数据
-  children: ?Array<VNode> // ! 子节点
+  tag: string | void
+  data: VNodeData | void
+  children: ?Array<VNode>
   text: string | void
   elm: Node | void
   ns: string | void
   context: Component | void // rendered in this component's scope
-  key: string | number | void // ! 键值
+  key: string | number | void
   componentOptions: VNodeComponentOptions | void
   componentInstance: Component | void // component instance
   parent: VNode | void // component placeholder node
@@ -30,9 +33,9 @@ export default class VNode {
   fnScopeId: ?string // functional scope id support
 
   constructor(
-    tag?: string,
-    data?: VNodeData,
-    children?: ?Array<VNode>,
+    tag?: string, // ! 标签名
+    data?: VNodeData, // ! 数据
+    children?: ?Array<VNode>, // ! 子节点
     text?: string,
     elm?: Node,
     context?: Component,
@@ -49,7 +52,7 @@ export default class VNode {
     this.fnContext = undefined
     this.fnOptions = undefined
     this.fnScopeId = undefined
-    this.key = data && data.key
+    this.key = data && data.key // ! 键值
     this.componentOptions = componentOptions
     this.componentInstance = undefined
     this.parent = undefined
@@ -71,6 +74,7 @@ export default class VNode {
   }
 }
 
+// ! 创建空节点的方法
 export const createEmptyVNode = (text: string = '') => {
   const node = new VNode()
   node.text = text

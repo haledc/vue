@@ -15,7 +15,7 @@ import { isFalse, isTrue, isDef, isUndef, isPrimitive } from 'shared/util'
 // normalization is needed - if any child is an Array, we flatten the whole
 // thing with Array.prototype.concat. It is guaranteed to be only 1-level deep
 // because functional components already normalize their own children.
-// ! 调用场景是 render 函数是函数编译生成的
+// ! 调用场景是 render 函数编译生成的
 export function simpleNormalizeChildren(children: any) {
   for (let i = 0; i < children.length; i++) {
     // ! 扁平化 children 数组，最后只有 1层
@@ -32,7 +32,7 @@ export function simpleNormalizeChildren(children: any) {
 // is needed to cater to all possible types of children values.
 export function normalizeChildren(children: any): ?Array<VNode> {
   return isPrimitive(children)
-    ? [createTextVNode(children)] // ! 创建文本节点
+    ? [createTextVNode(children)] // ! 基本类型，直接创建文本
     : Array.isArray(children)
     ? normalizeArrayChildren(children) // ! 规划化嵌套数组
     : undefined
@@ -42,7 +42,7 @@ function isTextNode(node): boolean {
   return isDef(node) && isDef(node.text) && isFalse(node.isComment)
 }
 
-// ! 规划化嵌套数组
+// ! 规划化嵌套数组，返回一个 VNode 类型的数组
 function normalizeArrayChildren(
   children: any,
   nestedIndex?: string
@@ -67,7 +67,7 @@ function normalizeArrayChildren(
         }
         res.push.apply(res, c)
       }
-      // ! 子节点是基础类型，创建文本节点
+      // ! 子节点是基本类型，创建文本节点
     } else if (isPrimitive(c)) {
       if (isTextNode(last)) {
         // merge adjacent text nodes

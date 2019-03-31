@@ -120,7 +120,7 @@ export function createPatchFunction(backend) {
 
   let creatingElmInVPre = 0
 
-  // ! 创建真实元素方法
+  // ! 生成真实元素的方法
   function createElm(
     vnode,
     insertedVnodeQueue,
@@ -183,19 +183,19 @@ export function createPatchFunction(backend) {
           }
           insert(parentElm, vnode.elm, refElm)
         }
-        createChildren(vnode, children, insertedVnodeQueue) // ! 创建子元素
+        createChildren(vnode, children, insertedVnodeQueue)
         if (appendAsTree) {
           if (isDef(data)) {
-            invokeCreateHooks(vnode, insertedVnodeQueue) // ! 执行所有的 create 钩子
+            invokeCreateHooks(vnode, insertedVnodeQueue)
           }
-          insert(parentElm, vnode.elm, refElm) // ! 把子元素插入到父元素中
+          insert(parentElm, vnode.elm, refElm)
         }
       } else {
-        createChildren(vnode, children, insertedVnodeQueue)
+        createChildren(vnode, children, insertedVnodeQueue) // ! 创建子元素
         if (isDef(data)) {
-          invokeCreateHooks(vnode, insertedVnodeQueue)
+          invokeCreateHooks(vnode, insertedVnodeQueue) // ! 执行所有的 create 钩子
         }
-        insert(parentElm, vnode.elm, refElm)
+        insert(parentElm, vnode.elm, refElm) // ! 把子元素插入到父元素中
       }
 
       if (process.env.NODE_ENV !== 'production' && data && data.pre) {
@@ -289,7 +289,7 @@ export function createPatchFunction(backend) {
     }
   }
 
-  // ! 创建子元素
+  // ! 创建子元素的方法
   function createChildren(vnode, children, insertedVnodeQueue) {
     if (Array.isArray(children)) {
       if (process.env.NODE_ENV !== 'production') {
@@ -843,12 +843,12 @@ export function createPatchFunction(backend) {
     }
   }
 
-  // ! patch 核心方法
   /**
-   * ! @param oldVnode 旧节点
-   * ! @param vnode _render 后返回的节点
-   * ! @param hydrating 是否服务端渲染
-   * ! @param removeOnly 给 transition-group 用的
+   * ! patch 核心方法
+   * @param oldVnode 旧节点
+   * @param vnode _render 后返回的节点
+   * @param hydrating 是否服务端渲染
+   * @param removeOnly 给 transition-group 用的
    */
   return function patch(oldVnode, vnode, hydrating, removeOnly) {
     if (isUndef(vnode)) {
@@ -902,7 +902,7 @@ export function createPatchFunction(backend) {
         const parentElm = nodeOps.parentNode(oldElm)
 
         // create new node
-        // ! 创建真实元素
+        // ! 生成真实元素
         createElm(
           vnode,
           insertedVnodeQueue,

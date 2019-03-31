@@ -18,11 +18,11 @@ export function initExtend(Vue: GlobalAPI) {
    */
   Vue.extend = function(extendOptions: Object): Function {
     extendOptions = extendOptions || {}
-    const Super = this // ! 主构造器
+    const Super = this // ! 根构造器
     const SuperId = Super.cid
     const cachedCtors = extendOptions._Ctor || (extendOptions._Ctor = {}) // ! 构造器缓存
     if (cachedCtors[SuperId]) {
-      return cachedCtors[SuperId] // ! 缓存构造器
+      return cachedCtors[SuperId] // ! 返回缓存
     }
 
     const name = extendOptions.name || Super.options.name
@@ -34,10 +34,10 @@ export function initExtend(Vue: GlobalAPI) {
     const Sub = function VueComponent(options) {
       this._init(options) // ! 初始化
     }
-    Sub.prototype = Object.create(Super.prototype) // ! 子构造器继承主构造器
+    Sub.prototype = Object.create(Super.prototype) // ! 子构造器继承根构造器
     Sub.prototype.constructor = Sub
     Sub.cid = cid++
-    Sub.options = mergeOptions(Super.options, extendOptions) // !合并父实例的选项
+    Sub.options = mergeOptions(Super.options, extendOptions) // ! 合并父构造器的配置
     Sub['super'] = Super
 
     // For props and computed properties, we define the proxy getters on

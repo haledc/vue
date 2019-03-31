@@ -71,7 +71,7 @@ export function lifecycleMixin(Vue: Class<Component>) {
       vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */) // ! 首次渲染成真实节点
     } else {
       // updates
-      vm.$el = vm.__patch__(prevVnode, vnode) // ! 更新渲染
+      vm.$el = vm.__patch__(prevVnode, vnode) // ! diff算法之后更新渲染
     }
     restoreActiveInstance()
     // update __vue__ reference
@@ -173,6 +173,7 @@ export function mountComponent(
   }
   callHook(vm, 'beforeMount') // ! 渲染之前，调用 beforeMount 钩子
 
+  // ! 更新组件
   let updateComponent
   /* istanbul ignore if */
   if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
@@ -201,7 +202,7 @@ export function mountComponent(
   // we set this to vm._watcher inside the watcher's constructor
   // since the watcher's initial patch may call $forceUpdate (e.g. inside child
   // component's mounted hook), which relies on vm._watcher being already defined
-  // ! 监听组件；订阅者
+  // ! 监听组件
   new Watcher(
     vm,
     updateComponent,
@@ -219,6 +220,7 @@ export function mountComponent(
 
   // manually mounted instance, call mounted on self
   // mounted is called for render-created child components in its inserted hook
+  // ! vue.$vnode 表示 Vue 实例的父虚拟 Node，为 null 表示当前是根 Vue 的实例
   if (vm.$vnode == null) {
     vm._isMounted = true
     callHook(vm, 'mounted')

@@ -91,10 +91,10 @@ export function renderMixin(Vue: Class<Component>) {
     return nextTick(fn, this)
   }
 
-  // ! _render 方法，把实例渲染成一个虚拟 Node
+  // ! _render 方法，返回一个虚拟 Node
   Vue.prototype._render = function(): VNode {
     const vm: Component = this
-    const { render, _parentVnode } = vm.$options // ! _parentVnode 父虚拟节点
+    const { render, _parentVnode } = vm.$options // ! 从配置中获取渲染方法和 _parentVnode 父虚拟节点
 
     if (_parentVnode) {
       vm.$scopedSlots = normalizeScopedSlots(

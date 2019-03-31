@@ -17,7 +17,8 @@ const idToTemplate = cached(id => {
   return el && el.innerHTML
 })
 
-const mount = Vue.prototype.$mount
+const mount = Vue.prototype.$mount // ! 先缓存原来的 runtime 的 $mount 方法
+// ! 重新定义挂载方法 with compile
 Vue.prototype.$mount = function(
   el?: string | Element,
   hydrating?: boolean
@@ -36,6 +37,7 @@ Vue.prototype.$mount = function(
 
   const options = this.$options
   // resolve template/el and convert to render function
+  // ! 如果没有渲染函数，把 el 或者 template 字符串转换成 render 方法
   if (!options.render) {
     let template = options.template
     if (template) {

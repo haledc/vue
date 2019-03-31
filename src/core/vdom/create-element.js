@@ -22,7 +22,7 @@ const ALWAYS_NORMALIZE = 2
 
 // wrapper function for providing a more flexible interface
 // without getting yelled at by flow
-// ! 创建元素（容错率高）
+// ! 创建元素
 export function createElement(
   context: Component,
   tag: any,
@@ -42,11 +42,11 @@ export function createElement(
   return _createElement(context, tag, data, children, normalizationType)
 }
 
-// ! 创建元素的具体方法
+// ! 创建元素的具体方法，生成虚拟 Node
 export function _createElement(
-  context: Component, // ! VNode 上下文环境
+  context: Component, // ! 上下文环境
   tag?: string | Class<Component> | Function | Object, // ! 标签 可以是字符串 或者组件 或者函数 作者对象
-  data?: VNodeData, // ! VNode 的数据
+  data?: VNodeData, // ! 数据
   children?: any, // ! 子节点 任意类型
   normalizationType?: number // ! 节点规范的类型
 ): VNode | Array<VNode> {
@@ -90,7 +90,7 @@ export function _createElement(
     children.length = 0
   }
 
-  // ! 根据规划类型，规划子节点
+  // ! ① 根据类型，规范子节点
   if (normalizationType === ALWAYS_NORMALIZE) {
     children = normalizeChildren(children)
   } else if (normalizationType === SIMPLE_NORMALIZE) {
@@ -98,6 +98,7 @@ export function _createElement(
   }
   let vnode, ns
 
+  // ! ② 创建 VNode
   // ! 如果 tag 是字符串类型的
   if (typeof tag === 'string') {
     let Ctor

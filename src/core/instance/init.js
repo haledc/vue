@@ -13,6 +13,7 @@ import { extend, mergeOptions, formatComponentName } from '../util/index'
 let uid = 0
 
 export function initMixin(Vue: Class<Component>) {
+  // ! 初始化的方法
   Vue.prototype._init = function(options?: Object) {
     const vm: Component = this
     // a uid
@@ -72,6 +73,7 @@ export function initMixin(Vue: Class<Component>) {
   }
 }
 
+// ! 初始化内部组件的方法
 export function initInternalComponent(
   vm: Component,
   options: InternalComponentOptions
