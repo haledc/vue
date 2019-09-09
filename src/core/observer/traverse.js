@@ -4,7 +4,7 @@ import { _Set as Set, isObject } from '../util/index'
 import type { SimpleSet } from '../util/index'
 import VNode from '../vdom/vnode'
 
-const seenObjects = new Set()
+const seenObjects = new Set() // ! 存储 id 值的集合
 
 /**
  * Recursively traverse an object to evoke all converted
@@ -30,14 +30,19 @@ function _traverse(val: any, seen: SimpleSet) {
   }
   if (val.__ob__) {
     const depId = val.__ob__.dep.id
+
+    // ! 已经遍历的对象，不会再遍历，避免循环引用
     if (seen.has(depId)) {
       return
     }
     seen.add(depId)
   }
+  // ! 数组
   if (isA) {
     i = val.length
     while (i--) _traverse(val[i], seen)
+
+    // ! 对象
   } else {
     keys = Object.keys(val)
     i = keys.length

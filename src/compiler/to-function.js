@@ -9,6 +9,7 @@ type CompiledFunctionResult = {
   staticRenderFns: Array<Function>
 }
 
+// ! 生成渲染函数的方法，渲染函数字符串 => 渲染函数
 function createFunction(code, errors) {
   try {
     return new Function(code)
@@ -18,8 +19,9 @@ function createFunction(code, errors) {
   }
 }
 
+// ! 创建编译方法的方法
 export function createCompileToFunctionFn(compile: Function): Function {
-  const cache = Object.create(null)
+  const cache = Object.create(null) // ! 创建缓存，由下面的闭包函数引用
 
   // ! 最终使用的编译方法
   return function compileToFunctions(
@@ -35,7 +37,7 @@ export function createCompileToFunctionFn(compile: Function): Function {
     if (process.env.NODE_ENV !== 'production') {
       // detect possible CSP restriction
       try {
-        new Function('return 1')
+        new Function('return 1') // ! 测试能否使用 new Function(), 模板字符串编译成渲染函数依赖 new Function()
       } catch (e) {
         if (e.toString().match(/unsafe-eval|CSP/)) {
           warn(
@@ -51,17 +53,18 @@ export function createCompileToFunctionFn(compile: Function): Function {
 
     // check cache
     const key = options.delimiters
-      ? String(options.delimiters) + template
+      ? String(options.delimiters) + template // ! 转换数组为字符串并和 template 合并
       : template
     if (cache[key]) {
       return cache[key]
     }
 
     // compile
-    const compiled = compile(template, options) // ! 编译模板；传入的参数
+    const compiled = compile(template, options) // ! 编译模板，模板字符串 => 渲染函数字符串
 
     // check compilation errors/tips
     if (process.env.NODE_ENV !== 'production') {
+      // ! 检查是否存在编译错误信息
       if (compiled.errors && compiled.errors.length) {
         if (options.outputSourceRange) {
           compiled.errors.forEach(e => {
@@ -80,6 +83,7 @@ export function createCompileToFunctionFn(compile: Function): Function {
           )
         }
       }
+      // ! 检查是否存在编译提示信息
       if (compiled.tips && compiled.tips.length) {
         if (options.outputSourceRange) {
           compiled.tips.forEach(e => tip(e.msg, vm))
@@ -91,11 +95,11 @@ export function createCompileToFunctionFn(compile: Function): Function {
 
     // turn code into functions
     const res = {}
-    const fnGenErrors = []
-    res.render = createFunction(compiled.render, fnGenErrors)
+    const fnGenErrors = [] // ! 创建函数时生成的错误信息的集合
+    res.render = createFunction(compiled.render, fnGenErrors) // ! 生成渲染函数
     res.staticRenderFns = compiled.staticRenderFns.map(code => {
       return createFunction(code, fnGenErrors)
-    })
+    }) // ! 生成静态渲染函数的数组 => 渲染优化
 
     // check function generation errors.
     // this should only happen if there is a bug in the compiler itself.
@@ -113,6 +117,6 @@ export function createCompileToFunctionFn(compile: Function): Function {
       }
     }
 
-    return (cache[key] = res)
+    return (cache[key] = res) // ! 缓存并返回编译结果
   }
 }

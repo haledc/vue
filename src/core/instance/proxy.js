@@ -82,9 +82,9 @@ if (process.env.NODE_ENV !== 'production') {
       const handlers = options.render && options.render._withStripped
         ? getHandler
         : hasHandler
-      vm._renderProxy = new Proxy(vm, handlers)
+      vm._renderProxy = new Proxy(vm, handlers) // ! 执行
     } else {
-      vm._renderProxy = vm
+      vm._renderProxy = vm // ! 和生成环境一样直接赋值
     }
   }
 }

@@ -30,7 +30,7 @@ export default class Dep {
   }
 
   /**
-   * ! 把 target 添加到订阅器
+   * ! 依赖收集
    */
   depend() {
     if (Dep.target) {
@@ -39,11 +39,14 @@ export default class Dep {
   }
 
   /**
-   * ! 通知订阅者
+   * ! 触发依赖
    */
   notify() {
     // stabilize the subscriber list first
     const subs = this.subs.slice()
+
+    // ! 同步执行，订阅器依赖需要排序
+    // ! 按照顺序来执行（不是异步队列全部入队后一起执行），主要用于开发环境中测试代码
     if (process.env.NODE_ENV !== 'production' && !config.async) {
       // subs aren't sorted in scheduler if not running async
       // we need to sort them now to make sure they fire in correct

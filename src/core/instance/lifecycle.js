@@ -29,21 +29,22 @@ export function setActiveInstance(vm: Component) {
   }
 }
 
-// ! 初始化生命周期的方法
+// ! 初始化生命周期相关配置的方法
 export function initLifecycle(vm: Component) {
   const options = vm.$options
 
   // locate first non-abstract parent
   let parent = options.parent
   if (parent && !options.abstract) {
+    // ! 查找第一个非抽象的父组件
     while (parent.$options.abstract && parent.$parent) {
       parent = parent.$parent
     }
-    parent.$children.push(vm) // ! 把实例存储到父实例里面
+    parent.$children.push(vm) // ! 把实例存储到父组件里面
   }
 
-  vm.$parent = parent // ! 存储父实例
-  vm.$root = parent ? parent.$root : vm
+  vm.$parent = parent // ! 添加父组件属性 $parent
+  vm.$root = parent ? parent.$root : vm // ! 新增属性 $root
 
   vm.$children = []
   vm.$refs = {}
@@ -66,6 +67,7 @@ export function lifecycleMixin(Vue: Class<Component>) {
     vm._vnode = vnode
     // Vue.prototype.__patch__ is injected in entry points
     // based on the rendering backend used.
+    // ! 重置 $el 属性的值
     if (!prevVnode) {
       // initial render
       vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */) // ! 首次渲染成真实节点
@@ -147,9 +149,9 @@ export function mountComponent(
   el: ?Element,
   hydrating?: boolean
 ): Component {
-  vm.$el = el
+  vm.$el = el // ! 更新 $el 属性
   if (!vm.$options.render) {
-    vm.$options.render = createEmptyVNode
+    vm.$options.render = createEmptyVNode // ! 生成一个空的 VNode
     if (process.env.NODE_ENV !== 'production') {
       /* istanbul ignore if */
       if (
@@ -171,9 +173,9 @@ export function mountComponent(
       }
     }
   }
-  callHook(vm, 'beforeMount') // ! 渲染之前，调用 beforeMount 钩子
+  callHook(vm, 'beforeMount') // ! 挂载组件之前，调用 beforeMount 钩子函数
 
-  // ! 更新组件
+  // ! 更新组件的方法
   let updateComponent
   /* istanbul ignore if */
   if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
@@ -183,13 +185,13 @@ export function mountComponent(
       const startTag = `vue-perf-start:${id}`
       const endTag = `vue-perf-end:${id}`
 
-      mark(startTag)
+      mark(startTag) // ! 开发环境性能统计 下同
       const vnode = vm._render() // ! 生成虚拟节点
       mark(endTag)
       measure(`vue ${name} render`, startTag, endTag)
 
       mark(startTag)
-      vm._update(vnode, hydrating) // ! 更新虚拟节点
+      vm._update(vnode, hydrating) // ! 将虚拟节点渲染到真实 DOM 中
       mark(endTag)
       measure(`vue ${name} patch`, startTag, endTag)
     }
@@ -202,7 +204,7 @@ export function mountComponent(
   // we set this to vm._watcher inside the watcher's constructor
   // since the watcher's initial patch may call $forceUpdate (e.g. inside child
   // component's mounted hook), which relies on vm._watcher being already defined
-  // ! 监听组件
+  // ! 生成观察者实例
   new Watcher(
     vm,
     updateComponent,
@@ -210,7 +212,7 @@ export function mountComponent(
     {
       before() {
         if (vm._isMounted && !vm._isDestroyed) {
-          callHook(vm, 'beforeUpdate')
+          callHook(vm, 'beforeUpdate') // ! 更新组件之前，调用 beforeUpdate 钩子函数
         }
       }
     },
@@ -351,6 +353,7 @@ export function deactivateChildComponent(vm: Component, direct?: boolean) {
   }
 }
 
+// ! 调用生命周期周期函数，执行里面的代码
 export function callHook(vm: Component, hook: string) {
   // #7573 disable dep collection when invoking lifecycle hooks
   pushTarget()

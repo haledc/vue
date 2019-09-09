@@ -262,6 +262,7 @@ const defaultStrat = function(parentVal: any, childVal: any): any {
 
 /**
  * Validate component names
+ * ! 校验组件的名字
  */
 function checkComponents(options: Object) {
   for (const key in options.components) {
@@ -292,23 +293,26 @@ export function validateComponentName(name: string) {
 /**
  * Ensure all props option syntax are normalized into the
  * Object-based format.
+ * ! 规范 props 属性
  */
 function normalizeProps(options: Object, vm: ?Component) {
   const props = options.props
   if (!props) return
   const res = {}
   let i, val, name
+  // ! 规范数组类型的 props
   if (Array.isArray(props)) {
     i = props.length
     while (i--) {
       val = props[i]
       if (typeof val === 'string') {
         name = camelize(val)
-        res[name] = { type: null }
+        res[name] = { type: null } // !不清除类型统一设置为 null
       } else if (process.env.NODE_ENV !== 'production') {
         warn('props must be strings when using array syntax.')
       }
     }
+    // ! 规范对象类型的 props
   } else if (isPlainObject(props)) {
     for (const key in props) {
       val = props[key]
@@ -322,7 +326,7 @@ function normalizeProps(options: Object, vm: ?Component) {
       vm
     )
   }
-  options.props = res
+  options.props = res // ! 最终都转换成对象类型的
 }
 
 /**
@@ -380,6 +384,7 @@ function assertObjectType(name: string, value: any, vm: ?Component) {
 /**
  * Merge two option objects into a new one.
  * Core utility used in both instantiation and inheritance.
+ * ! 合并配置的方法
  */
 export function mergeOptions(
   parent: Object,
@@ -390,13 +395,15 @@ export function mergeOptions(
     checkComponents(child)
   }
 
+  // 当子配置是函数时（Vue.extend 创造的子类），获取其静态属性 options
   if (typeof child === 'function') {
     child = child.options
   }
 
-  normalizeProps(child, vm)
-  normalizeInject(child, vm)
-  normalizeDirectives(child)
+  // ! 有些类型的设置比较灵活多变，需要先规范化后，再合并
+  normalizeProps(child, vm) // ! 规范化 props 类型
+  normalizeInject(child, vm) // ! 规范化 inject 类型
+  normalizeDirectives(child) // ! 规范化 指令
 
   // Apply extends and mixins on the child options,
   // but only if it is a raw options object that isn't

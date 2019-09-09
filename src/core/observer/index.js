@@ -43,10 +43,10 @@ export class Observer {
     this.value = value
     this.dep = new Dep() // ! 实例一个订阅器
     this.vmCount = 0
-    def(value, '__ob__', this) // ! 自身实例添加到数据对象 value 的 __ob__ 属性上
+    def(value, '__ob__', this) // ! 自身实例添加到数据对象 value 的 __ob__ 属性上 (__ob__监听对象标识)
     // ! 监听数组时
     if (Array.isArray(value)) {
-      // ! 判断是否有 __proto__ 属性
+      // ! 判断当前环境的对象中是否有 __proto__ 属性 （是否支持使用 __proto__）
       if (hasProto) {
         protoAugment(value, arrayMethods)
       } else {
@@ -108,6 +108,7 @@ function copyAugment(target: Object, src: Object, keys: Array<string>) {
  * Attempt to create an observer instance for a value,
  * returns the new observer if successfully observed,
  * or the existing observer if the value already has one.
+ * ! 监听方法
  */
 export function observe(value: any, asRootData: ?boolean): Observer | void {
   // ! 非虚拟节点的对象
@@ -115,18 +116,21 @@ export function observe(value: any, asRootData: ?boolean): Observer | void {
     return
   }
   let ob: Observer | void
-  // ! 已经是监听对象了，返回它
+
+  // ! 已经是监听对象了，返回它，不用重复监听
   if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
     ob = value.__ob__
   } else if (
     shouldObserve &&
     !isServerRendering() &&
     (Array.isArray(value) || isPlainObject(value)) &&
-    Object.isExtensible(value) &&
-    !value._isVue
+    Object.isExtensible(value) && // ! 对象可扩展
+    !value._isVue // ! 不是 Vue 实例
   ) {
     ob = new Observer(value) // ! 实例化一个监听对象
   }
+
+  // ! 对象时根实例数据对象时， vmCount++
   if (asRootData && ob) {
     ob.vmCount++
   }
@@ -135,6 +139,7 @@ export function observe(value: any, asRootData: ?boolean): Observer | void {
 
 /**
  * Define a reactive property on an Object.
+ * ! 定义响应式的方法
  */
 export function defineReactive(
   obj: Object,
@@ -151,20 +156,21 @@ export function defineReactive(
   }
 
   // cater for pre-defined getter/setters
+  // ! 缓存对象原来的 getter/setters
   const getter = property && property.get
   const setter = property && property.set
   if ((!getter || setter) && arguments.length === 2) {
     val = obj[key]
   }
 
-  let childOb = !shallow && observe(val) // ! 监听属性
+  let childOb = !shallow && observe(val) // ! 监听孩子属性
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
     get: function reactiveGetter() {
-      const value = getter ? getter.call(obj) : val
+      const value = getter ? getter.call(obj) : val // ! 获取值
       if (Dep.target) {
-        dep.depend() // ! 添加进订阅器；依赖收集
+        dep.depend() // ! 添加进订阅器，依赖收集
         if (childOb) {
           childOb.dep.depend()
           if (Array.isArray(value)) {
@@ -172,11 +178,12 @@ export function defineReactive(
           }
         }
       }
-      return value
+      return value // ! 返回值
     },
     set: function reactiveSetter(newVal) {
-      const value = getter ? getter.call(obj) : val
+      const value = getter ? getter.call(obj) : val // ! 获取值 (旧值)
       /* eslint-disable no-self-compare */
+      // ! NaN === NaN false
       if (newVal === value || (newVal !== newVal && value !== value)) {
         return
       }
@@ -187,12 +194,12 @@ export function defineReactive(
       // #7981: for accessor properties without setter
       if (getter && !setter) return
       if (setter) {
-        setter.call(obj, newVal)
+        setter.call(obj, newVal) // ! 执行原来的 setter, 设置新值
       } else {
-        val = newVal
+        val = newVal // ! 设置新值
       }
-      childOb = !shallow && observe(newVal)
-      dep.notify() // ! 通知订阅者
+      childOb = !shallow && observe(newVal) // ! 深度监听新值（对象或者数组）
+      dep.notify() // ! 通知观察者, 触发依赖
     }
   })
 }
@@ -201,7 +208,7 @@ export function defineReactive(
  * Set a property on an object. Adds the new property and
  * triggers change notification if the property doesn't
  * already exist.
- * ! 设置新加属性为响应式
+ * ! 设置新增的属性为响应式
  */
 export function set(target: Array<any> | Object, key: any, val: any): any {
   if (
@@ -215,19 +222,20 @@ export function set(target: Array<any> | Object, key: any, val: any): any {
 
   // ! target 是数组时
   if (Array.isArray(target) && isValidArrayIndex(key)) {
-    target.length = Math.max(target.length, key)
-    target.splice(key, 1, val) // ! 把值插入数组
+    target.length = Math.max(target.length, key) // ! 修改数组长度
+    target.splice(key, 1, val) // ! 使用重写的 splice 触发响应 (注意如果 key 大于原数组长度时 splice 无效)
     return val
   }
 
   // ! key 已经存在对象 target 且不在它的原型中时
   if (key in target && !(key in Object.prototype)) {
-    target[key] = val
-    return val // ! 直接返回 因为本来就可以观测到
+    target[key] = val // ! 修改原来的值
+    return val // ! 直接返回 因为本来已经监听，会自动触发
   }
 
   // ! 获取原对象的 __ob__ 属性
   const ob = (target: any).__ob__
+  // ! 不允许设置 Vue 实例 和 根实例数据对象（根 data 不是响应式的）的属性
   if (target._isVue || (ob && ob.vmCount)) {
     process.env.NODE_ENV !== 'production' &&
       warn(
@@ -237,7 +245,7 @@ export function set(target: Array<any> | Object, key: any, val: any): any {
     return val
   }
 
-  // ! 新属性添加
+  // ! 原对象不是响应式对象，新属性直接赋值并返回
   if (!ob) {
     target[key] = val
     return val
@@ -260,10 +268,12 @@ export function del(target: Array<any> | Object, key: any) {
     )
   }
   if (Array.isArray(target) && isValidArrayIndex(key)) {
-    target.splice(key, 1)
+    target.splice(key, 1) // ! splice 删除触发响应
     return
   }
   const ob = (target: any).__ob__
+
+  // ! 不能删除 Vue 实例 和 根实例数据对象（根 data 不是响应式的）的属性
   if (target._isVue || (ob && ob.vmCount)) {
     process.env.NODE_ENV !== 'production' &&
       warn(
@@ -272,24 +282,27 @@ export function del(target: Array<any> | Object, key: any) {
       )
     return
   }
+  // ! 没有要删除的属性
   if (!hasOwn(target, key)) {
     return
   }
   delete target[key]
+
   if (!ob) {
     return
   }
-  ob.dep.notify()
+  ob.dep.notify() // ! 手动触发依赖
 }
 
 /**
  * Collect dependencies on array elements when the array is touched, since
  * we cannot intercept array element access like property getters.
+ * ! 数组元素依赖收集 (defineProperty 无法定义数组索引)
  */
 function dependArray(value: Array<any>) {
   for (let e, i = 0, l = value.length; i < l; i++) {
     e = value[i]
-    e && e.__ob__ && e.__ob__.dep.depend()
+    e && e.__ob__ && e.__ob__.dep.depend() // ! 手动依赖收集
     if (Array.isArray(e)) {
       dependArray(e)
     }

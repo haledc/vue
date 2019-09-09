@@ -6,18 +6,20 @@ import { createCompileToFunctionFn } from './to-function'
 
 export function createCompilerCreator(baseCompile: Function): Function {
   return function createCompiler(baseOptions: CompilerOptions) {
-    // ! 编译的方法
+    // ! 编译模板字符串的方法
     function compile(
       template: string,
-      options?: CompilerOptions
+      options?: CompilerOptions // ! 用户定制选项
     ): CompiledResult {
-      const finalOptions = Object.create(baseOptions)
-      const errors = []
-      const tips = []
+      const finalOptions = Object.create(baseOptions) // ! 创建最终的编译选项参数
+      const errors = [] // ! 错误信息集合
+      const tips = [] // ! 提示信息集合
+
       let warn = (msg, range, tip) => {
         ;(tip ? tips : errors).push(msg)
       }
 
+      // ! 将用户定制选项配置合并到最终的选项参数中
       if (options) {
         if (
           process.env.NODE_ENV !== 'production' &&
@@ -40,12 +42,15 @@ export function createCompilerCreator(baseCompile: Function): Function {
           }
         }
         // merge custom modules
+        // ! 合并数组
         if (options.modules) {
           finalOptions.modules = (baseOptions.modules || []).concat(
             options.modules
           )
         }
+
         // merge custom directives
+        // ! 合并对象
         if (options.directives) {
           finalOptions.directives = extend(
             Object.create(baseOptions.directives || null),
@@ -53,6 +58,7 @@ export function createCompilerCreator(baseCompile: Function): Function {
           )
         }
         // copy other options
+        // ! 其他的直接复制进去
         for (const key in options) {
           if (key !== 'modules' && key !== 'directives') {
             finalOptions[key] = options[key]
@@ -62,7 +68,8 @@ export function createCompilerCreator(baseCompile: Function): Function {
 
       finalOptions.warn = warn
 
-      const compiled = baseCompile(template.trim(), finalOptions) // ! 基础编译
+      const compiled = baseCompile(template.trim(), finalOptions) // ! 具体的编译方法，生成渲染函数字符串
+
       if (process.env.NODE_ENV !== 'production') {
         detectErrors(compiled.ast, warn)
       }
@@ -72,8 +79,8 @@ export function createCompilerCreator(baseCompile: Function): Function {
     }
 
     return {
-      compile,
-      compileToFunctions: createCompileToFunctionFn(compile)
+      compile, // ! 生成渲染函数字符串
+      compileToFunctions: createCompileToFunctionFn(compile) // ! 生成真正的渲染函数
     }
   }
 }

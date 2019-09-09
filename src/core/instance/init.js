@@ -17,10 +17,11 @@ export function initMixin(Vue: Class<Component>) {
   Vue.prototype._init = function(options?: Object) {
     const vm: Component = this
     // a uid
-    vm._uid = uid++
+    vm._uid = uid++ // ! 唯一标示
 
     let startTag, endTag
     /* istanbul ignore if */
+    // ! 性能追踪相关
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
       startTag = `vue-perf-start:${vm._uid}`
       endTag = `vue-perf-end:${vm._uid}`
@@ -36,13 +37,15 @@ export function initMixin(Vue: Class<Component>) {
       // internal component options needs special treatment.
       initInternalComponent(vm, options)
     } else {
+      // ! 合并配置
       vm.$options = mergeOptions(
-        resolveConstructorOptions(vm.constructor),
-        options || {},
-        vm
+        resolveConstructorOptions(vm.constructor), // ! Vue 初始化时的默认配置,比如默认的指令和组件等等
+        options || {}, // ! 用户传入的配置
+        vm // !  Vue 实例对象本身
       )
     }
     /* istanbul ignore else */
+    // ! 初始化代理
     if (process.env.NODE_ENV !== 'production') {
       initProxy(vm)
     } else {
@@ -50,14 +53,14 @@ export function initMixin(Vue: Class<Component>) {
     }
     // expose real self
     vm._self = vm
-    initLifecycle(vm) // ! 初始化生命周期
-    initEvents(vm) // ! 初始化事件
-    initRender(vm) // ! 初始化渲染
-    callHook(vm, 'beforeCreate') // ! 调用 beforeCreate 钩子
-    initInjections(vm) // ! resolve injections before data/props 初始化 Injections，在 state 之前
-    initState(vm) // ! 初始化状态 包括 props data computed methods watch
-    initProvide(vm) // ! resolve provide after data/props 初始化 Provide，在 state 之后
-    callHook(vm, 'created') // ! 调用 beforeCreate 钩子
+    initLifecycle(vm) // ! 初始化生命周期相关配置 存储本身实例到父节点 新增属性 $parent $root $children $refs 等
+    initEvents(vm) // ! 初始化事件相关配置 更新 listeners
+    initRender(vm) // ! 初始化渲染, 创建VNode 另新增属性 $attrs 和 $listeners
+    callHook(vm, 'beforeCreate') // ! 调用 beforeCreate 钩子函数
+    initInjections(vm) // ! 初始化 Injections resolve injections before data/props 
+    initState(vm) // ! 初始化状态 按顺序 props => methods => data => computed  => watch
+    initProvide(vm) // ! 初始化 Provide resolve provide after data/props 
+    callHook(vm, 'created') // ! 调用 created 钩子函数
 
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
@@ -97,6 +100,7 @@ export function initInternalComponent(
   }
 }
 
+// ! 解析 Vue 初始化时构造函数的 options (注意区别 Vue 的构造函数和子类（Vue.extend()）的构造函数)
 export function resolveConstructorOptions(Ctor: Class<Component>) {
   let options = Ctor.options
   if (Ctor.super) {

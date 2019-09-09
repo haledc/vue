@@ -73,7 +73,7 @@ function flushSchedulerQueue() {
   //    user watchers are created before the render watcher)
   // 3. If a component is destroyed during a parent component's watcher run,
   //    its watchers can be skipped.
-  queue.sort((a, b) => a.id - b.id) // ! 队列排序；先父后子；先自定义的；
+  queue.sort((a, b) => a.id - b.id) // ! 队列排序 => 先父后子 => 先自定义的
 
   // do not cache length because more watchers might be pushed
   // as we run existing watchers
@@ -81,6 +81,8 @@ function flushSchedulerQueue() {
   // ! 因为在 watcher.run() 的时候，很可能用户会再次添加新的 watcher
   for (index = 0; index < queue.length; index++) {
     watcher = queue[index]
+
+    // ! 有 before 先执行 before
     if (watcher.before) {
       watcher.before()
     }
@@ -126,7 +128,7 @@ function callUpdatedHooks(queue) {
     const watcher = queue[i]
     const vm = watcher.vm
     if (vm._watcher === watcher && vm._isMounted && !vm._isDestroyed) {
-      callHook(vm, 'updated') // ! 调用 updated 钩子，在挂载和监听数据之后
+      callHook(vm, 'updated') // ! 在挂载和监听数据之后, 调用 updated 钩子函数
     }
   }
 }
@@ -153,14 +155,14 @@ function callActivatedHooks(queue) {
  * Push a watcher into the watcher queue.
  * Jobs with duplicate IDs will be skipped unless it's
  * pushed when the queue is being flushed.
- * ! 队列化 订阅者
+ * ! 异步队列更新
  */
 export function queueWatcher(watcher: Watcher) {
   const id = watcher.id
   if (has[id] == null) {
     has[id] = true
     if (!flushing) {
-      queue.push(watcher) // ! 把订阅者保存在一个队列里
+      queue.push(watcher) // ! 把观察者保存在一个队列中
     } else {
       // if already flushing, splice the watcher based on its id
       // if already past its id, it will be run next immediately.
@@ -168,17 +170,20 @@ export function queueWatcher(watcher: Watcher) {
       while (i > index && queue[i].id > watcher.id) {
         i--
       }
-      queue.splice(i + 1, 0, watcher) // ! 把订阅者插入到第一个比它 id 大的后面
+      queue.splice(i + 1, 0, watcher) // ! 把观察者插入到第一个比它 id 大的后面
     }
+
     // queue the flush
+    // ! waiting 标识 保证只执行一次
     if (!waiting) {
       waiting = true
 
+      // ! 同步执行，主要用于开发环境中测试代码
       if (process.env.NODE_ENV !== 'production' && !config.async) {
         flushSchedulerQueue()
         return
       }
-      nextTick(flushSchedulerQueue) // ! 在 nextTick 之后执行
+      nextTick(flushSchedulerQueue) // ! 在 nextTick 之后执行异步队列的回调函数
     }
   }
 }

@@ -4,6 +4,7 @@ import { ASSET_TYPES } from 'shared/constants'
 import { defineComputed, proxy } from '../instance/state'
 import { extend, mergeOptions, validateComponentName } from '../util/index'
 
+// 初始化 extend， 添加 extend 方法
 export function initExtend(Vue: GlobalAPI) {
   /**
    * Each instance constructor, including Vue, has a unique

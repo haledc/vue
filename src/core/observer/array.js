@@ -28,7 +28,7 @@ methodsToPatch.forEach(function(method) {
   def(arrayMethods, method, function mutator(...args) {
     const result = original.apply(this, args)
     const ob = this.__ob__
-    let inserted
+    let inserted // ! 数组新增的值
     switch (method) {
       case 'push':
       case 'unshift':
@@ -38,7 +38,7 @@ methodsToPatch.forEach(function(method) {
         inserted = args.slice(2)
         break
     }
-    if (inserted) ob.observeArray(inserted) // ! 监听插入的值
+    if (inserted) ob.observeArray(inserted) // ! 监听新增的值
     // notify change
     ob.dep.notify() // ! 手动触发依赖通知
     return result

@@ -10,7 +10,7 @@ export let isUsingMicroTask = false
 const callbacks = []
 let pending = false
 
-function flushCallbacks () {
+function flushCallbacks() {
   pending = false
   const copies = callbacks.slice(0)
   callbacks.length = 0
@@ -30,6 +30,8 @@ function flushCallbacks () {
 // where microtasks have too high a priority and fire in between supposedly
 // sequential events (e.g. #4521, #6690, which have workarounds)
 // or even between bubbling of the same event (#6566).
+// ! 回调函数，明面上不分 microtasks 和 (macro)tasks 了，按照下面的优先级来实现
+// ! 优先级（性能高低） Promise => MutationObserver => setImmediate => setTimeout
 let timerFunc
 
 // The nextTick behavior leverages the microtask queue, which can be accessed
@@ -39,6 +41,7 @@ let timerFunc
 // completely stops working after triggering a few times... so, if native
 // Promise is available, we will use it:
 /* istanbul ignore next, $flow-disable-line */
+// ! 原生 Promise
 if (typeof Promise !== 'undefined' && isNative(Promise)) {
   const p = Promise.resolve()
   timerFunc = () => {
@@ -51,11 +54,15 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
     if (isIOS) setTimeout(noop)
   }
   isUsingMicroTask = true
-} else if (!isIE && typeof MutationObserver !== 'undefined' && (
-  isNative(MutationObserver) ||
-  // PhantomJS and iOS 7.x
-  MutationObserver.toString() === '[object MutationObserverConstructor]'
-)) {
+
+  // ! MutationObserver
+} else if (
+  !isIE &&
+  typeof MutationObserver !== 'undefined' &&
+  (isNative(MutationObserver) ||
+    // PhantomJS and iOS 7.x
+    MutationObserver.toString() === '[object MutationObserverConstructor]')
+) {
   // Use MutationObserver where native Promise is not available,
   // e.g. PhantomJS, iOS7, Android 4.4
   // (#6466 MutationObserver is unreliable in IE11)
@@ -70,6 +77,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
     textNode.data = String(counter)
   }
   isUsingMicroTask = true
+  // ! setImmediate
 } else if (typeof setImmediate !== 'undefined' && isNative(setImmediate)) {
   // Fallback to setImmediate.
   // Techinically it leverages the (macro) task queue,
@@ -77,6 +85,8 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   timerFunc = () => {
     setImmediate(flushCallbacks)
   }
+
+  // ! setTimeout
 } else {
   // Fallback to setTimeout.
   timerFunc = () => {
@@ -84,7 +94,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   }
 }
 
-export function nextTick (cb?: Function, ctx?: Object) {
+export function nextTick(cb?: Function, ctx?: Object) {
   let _resolve
   callbacks.push(() => {
     if (cb) {

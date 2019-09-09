@@ -4,7 +4,7 @@ import config from 'core/config'
 import { warn, cached } from 'core/util/index'
 import { mark, measure } from 'core/util/perf'
 
-import Vue from './runtime/index'
+import Vue from './runtime/index' // ! 导入 runtime 版本的 Vue
 import { query } from './util/index'
 import { compileToFunctions } from './compiler/index'
 import {
@@ -17,8 +17,9 @@ const idToTemplate = cached(id => {
   return el && el.innerHTML
 })
 
-const mount = Vue.prototype.$mount // ! 先缓存原来的 runtime 的 $mount 方法
-// ! 重新定义挂载方法 with compile
+const mount = Vue.prototype.$mount // ! 缓存 runtime 版本的 $mount 方法
+
+// ! 重写 $mount 方法 with compiler
 Vue.prototype.$mount = function(
   el?: string | Element,
   hydrating?: boolean
@@ -40,8 +41,12 @@ Vue.prototype.$mount = function(
   // ! 如果没有渲染函数，把 el 或者 template 字符串转换成 render 方法
   if (!options.render) {
     let template = options.template
+
+    // ! 处理 template
+    // ! 优先 template 选项
     if (template) {
       if (typeof template === 'string') {
+        // ! id 选择器
         if (template.charAt(0) === '#') {
           template = idToTemplate(template)
           /* istanbul ignore if */
@@ -52,32 +57,37 @@ Vue.prototype.$mount = function(
             )
           }
         }
+        // ! 元素类型
       } else if (template.nodeType) {
         template = template.innerHTML
+        // ! 其他 无效的 template
       } else {
         if (process.env.NODE_ENV !== 'production') {
           warn('invalid template option:' + template, this)
         }
         return this
       }
+      // ! 其次 el 选项
     } else if (el) {
       template = getOuterHTML(el)
     }
+
     if (template) {
       /* istanbul ignore if */
+      // ! 测试编译性能
       if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
         mark('compile')
       }
 
-      // ! 编译的入口
+      // ! 生成渲染函数，编译的入口
       const { render, staticRenderFns } = compileToFunctions(
         template,
         {
           outputSourceRange: process.env.NODE_ENV !== 'production',
           shouldDecodeNewlines,
           shouldDecodeNewlinesForHref,
-          delimiters: options.delimiters,
-          comments: options.comments
+          delimiters: options.delimiters, // ! 分隔符配置，是个数组，默认是 ["{{", "}}"]
+          comments: options.comments // ! 评论配置
         },
         this
       )
@@ -85,6 +95,7 @@ Vue.prototype.$mount = function(
       options.staticRenderFns = staticRenderFns
 
       /* istanbul ignore if */
+      // ! 测试编译性能结束
       if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
         mark('compile end')
         measure(`vue ${this._name} compile`, 'compile', 'compile end')
@@ -108,6 +119,6 @@ function getOuterHTML(el: Element): string {
   }
 }
 
-Vue.compile = compileToFunctions
+Vue.compile = compileToFunctions // ! 新增方法 compile
 
 export default Vue

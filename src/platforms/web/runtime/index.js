@@ -1,5 +1,5 @@
 /* @flow */
-
+// ! web 平台包装
 import Vue from 'core/index'
 import config from 'core/config'
 import { extend, noop } from 'shared/util'
@@ -20,6 +20,7 @@ import platformDirectives from './directives/index'
 import platformComponents from './components/index'
 
 // install platform specific utils
+// ! 设置 web 平台配置选项
 Vue.config.mustUseProp = mustUseProp
 Vue.config.isReservedTag = isReservedTag
 Vue.config.isReservedAttr = isReservedAttr
@@ -27,15 +28,16 @@ Vue.config.getTagNamespace = getTagNamespace
 Vue.config.isUnknownElement = isUnknownElement
 
 // install platform runtime directives & components
+// ! 安装 web 平台运行时的指令 v-model v-show 和组件 <transition/> <transition-group/>
 extend(Vue.options.directives, platformDirectives)
 extend(Vue.options.components, platformComponents)
 
 // install platform patch functionll
-// ! 不同的平台，不同的 patch 方法
+// ! 安装 web 平台的 __patch__ 方法
 Vue.prototype.__patch__ = inBrowser ? patch : noop
 
 // public mount method
-// ! 挂载元素的方法 runtime
+// ! 安装 web 平台的挂载方法 $mount （这里是 runtime 版本）
 Vue.prototype.$mount = function(
   el?: string | Element,
   hydrating?: boolean
@@ -46,6 +48,7 @@ Vue.prototype.$mount = function(
 
 // devtools global hook
 /* istanbul ignore next */
+// ! 安装 devtools
 if (inBrowser) {
   setTimeout(() => {
     if (config.devtools) {

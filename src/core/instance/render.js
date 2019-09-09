@@ -16,7 +16,7 @@ import VNode, { createEmptyVNode } from '../vdom/vnode'
 
 import { isUpdatingChildComponent } from './lifecycle'
 
-// ! 初始化渲染
+// ! 初始化渲染的方法
 export function initRender(vm: Component) {
   vm._vnode = null // the root of the child tree
   vm._staticTrees = null // v-once cached trees
@@ -29,7 +29,7 @@ export function initRender(vm: Component) {
   // so that we get proper render context inside it.
   // args order: tag, data, children, normalizationType, alwaysNormalize
   // internal version is used by render functions compiled from templates
-  vm._c = (a, b, c, d) => createElement(vm, a, b, c, d, false) // ! 被模板使用的渲染方法
+  vm._c = (a, b, c, d) => createElement(vm, a, b, c, d, false) // ! 编译器渲染模板的渲染方法
   // normalization is always applied for the public version, used in
   // user-written render functions.
   vm.$createElement = (a, b, c, d) => createElement(vm, a, b, c, d, true) // ! 用户手写的渲染方法
@@ -40,6 +40,7 @@ export function initRender(vm: Component) {
 
   /* istanbul ignore else */
   if (process.env.NODE_ENV !== 'production') {
+    // ! 定义 $attrs 属性
     defineReactive(
       vm,
       '$attrs',
@@ -49,6 +50,7 @@ export function initRender(vm: Component) {
       },
       true
     )
+    // ! 定义 $listeners 属性
     defineReactive(
       vm,
       '$listeners',

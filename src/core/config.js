@@ -10,6 +10,7 @@ import { LIFECYCLE_HOOKS } from 'shared/constants'
 
 export type Config = {
   // user
+  // ! 用户自定义配置
   optionMergeStrategies: { [key: string]: Function };
   silent: boolean;
   productionTip: boolean;
@@ -21,6 +22,7 @@ export type Config = {
   keyCodes: { [key: string]: number | Array<number> };
 
   // platform
+  // ! 平台配置属性
   isReservedTag: (x?: string) => boolean;
   isReservedAttr: (x?: string) => boolean;
   parsePlatformTagName: (x: string) => string;
