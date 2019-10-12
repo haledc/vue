@@ -74,7 +74,7 @@ export default class VNode {
   }
 }
 
-// ! 创建空节点的方法
+// ! 创建空节点的函数
 export const createEmptyVNode = (text: string = '') => {
   const node = new VNode()
   node.text = text

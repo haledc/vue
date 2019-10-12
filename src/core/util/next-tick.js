@@ -7,13 +7,15 @@ import { isIE, isIOS, isNative } from './env'
 
 export let isUsingMicroTask = false
 
-const callbacks = []
-let pending = false
+const callbacks = [] // ! 回调函数组成的数组
+let pending = false // ! 队列是否需要等待刷新，false 表示队列为空，不用等待刷新
 
+// ! 执行 callbacks 的所有的回调函数
 function flushCallbacks() {
-  pending = false
-  const copies = callbacks.slice(0)
-  callbacks.length = 0
+  pending = false // ! 重置 pending
+  const copies = callbacks.slice(0) // ! 拷贝副本
+  callbacks.length = 0 // ! 清空 callbacks
+  // ! 执行拷贝副本的所有回调函数
   for (let i = 0; i < copies.length; i++) {
     copies[i]()
   }
@@ -41,7 +43,7 @@ let timerFunc
 // completely stops working after triggering a few times... so, if native
 // Promise is available, we will use it:
 /* istanbul ignore next, $flow-disable-line */
-// ! 原生 Promise
+// ! Promise
 if (typeof Promise !== 'undefined' && isNative(Promise)) {
   const p = Promise.resolve()
   timerFunc = () => {
@@ -55,7 +57,8 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   }
   isUsingMicroTask = true
 
-  // ! MutationObserver
+  // ! MutationObserver 
+  // ! 创建并返回一个新的 MutationObserver 它会在指定的 DOM 发生变化时被调用
 } else if (
   !isIE &&
   typeof MutationObserver !== 'undefined' &&
@@ -96,6 +99,8 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
 
 export function nextTick(cb?: Function, ctx?: Object) {
   let _resolve
+
+  // ! 把 cb 包装成一个函数，并放入 callbacks 数组中
   callbacks.push(() => {
     if (cb) {
       try {
@@ -107,11 +112,15 @@ export function nextTick(cb?: Function, ctx?: Object) {
       _resolve(ctx)
     }
   })
+
+   // ! 判断队列是否需要等待刷新
   if (!pending) {
     pending = true
-    timerFunc()
+    timerFunc() // ! 执行异步任务
   }
+
   // $flow-disable-line
+  // ! nextTick 没有传入回调函数时，提供一个 Promise 化的调用
   if (!cb && typeof Promise !== 'undefined') {
     return new Promise(resolve => {
       _resolve = resolve

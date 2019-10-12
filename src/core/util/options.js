@@ -326,7 +326,7 @@ function normalizeProps(options: Object, vm: ?Component) {
       vm
     )
   }
-  options.props = res // ! 最终都转换成对象类型的
+  options.props = res // ! 最终都转换成对象类型的值
 }
 
 /**
@@ -384,7 +384,7 @@ function assertObjectType(name: string, value: any, vm: ?Component) {
 /**
  * Merge two option objects into a new one.
  * Core utility used in both instantiation and inheritance.
- * ! 合并配置的方法
+ * ! 合并配置的函数
  */
 export function mergeOptions(
   parent: Object,
@@ -395,7 +395,7 @@ export function mergeOptions(
     checkComponents(child)
   }
 
-  // 当子配置是函数时（Vue.extend 创造的子类），获取其静态属性 options
+  // ! 当子配置是函数时（Vue.extend 创造的子类），获取其静态属性 options
   if (typeof child === 'function') {
     child = child.options
   }
@@ -423,19 +423,19 @@ export function mergeOptions(
   const options = {}
   let key
 
-  // ! 遍历父实例
+  // ! 遍历默认配置
   for (key in parent) {
     mergeField(key)
   }
 
-  // ! 遍历子实例
+  // ! 遍历用户配置
   for (key in child) {
     if (!hasOwn(parent, key)) {
       mergeField(key)
     }
   }
 
-  // ! 根据 key，实现不同的合并策略
+  // ! 根据 key 值的不同，使用不同的合并策略
   function mergeField(key) {
     const strat = strats[key] || defaultStrat
     options[key] = strat(parent[key], child[key], vm, key)

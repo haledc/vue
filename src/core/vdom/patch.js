@@ -120,7 +120,7 @@ export function createPatchFunction(backend) {
 
   let creatingElmInVPre = 0
 
-  // ! 生成真实元素的方法
+  // ! 生成真实元素的函数
   function createElm(
     vnode,
     insertedVnodeQueue,
@@ -210,7 +210,7 @@ export function createPatchFunction(backend) {
     }
   }
 
-  // ! 创建组件的方法
+  // ! 创建组件的函数
   function createComponent(vnode, insertedVnodeQueue, parentElm, refElm) {
     let i = vnode.data // ! init 的钩子函数
     if (isDef(i)) {
@@ -276,7 +276,7 @@ export function createPatchFunction(backend) {
     insert(parentElm, vnode.elm, refElm)
   }
 
-  // ! 把子元素插入到父元素中的方法
+  // ! 把子元素插入到父元素中的函数
   function insert(parent, elm, ref) {
     if (isDef(parent)) {
       if (isDef(ref)) {
@@ -289,7 +289,7 @@ export function createPatchFunction(backend) {
     }
   }
 
-  // ! 创建子元素的方法
+  // ! 创建子元素的函数
   function createChildren(vnode, children, insertedVnodeQueue) {
     if (Array.isArray(children)) {
       if (process.env.NODE_ENV !== 'production') {
@@ -394,7 +394,7 @@ export function createPatchFunction(backend) {
     }
   }
 
-  // ! 删除虚拟节点的方法
+  // ! 删除虚拟节点的函数
   function removeVnodes(parentElm, vnodes, startIdx, endIdx) {
     // ! 遍历要删除的节点
     for (; startIdx <= endIdx; ++startIdx) {
@@ -444,7 +444,7 @@ export function createPatchFunction(backend) {
     }
   }
 
-  // ! 更新子节点的方法
+  // ! 更新子节点的函数
   // ! diff 算法
   function updateChildren(
     parentElm,

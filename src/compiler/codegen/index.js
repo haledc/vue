@@ -548,7 +548,7 @@ function genNode(node: ASTNode, state: CodegenState): string {
   }
 }
 
-// ! 生成文本节点的方法
+// ! 生成文本节点的函数
 export function genText(text: ASTText | ASTExpression): string {
   return `_v(${
     text.type === 2 // ! 是否表达式

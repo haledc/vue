@@ -17,14 +17,16 @@ export default class Dep {
   subs: Array<Watcher>
 
   constructor() {
-    this.id = uid++
+    this.id = uid++ // ! 唯一标识，可以用来区分 dep，以及引用 dep 的属性
     this.subs = []
   }
 
+  // ! 添加观察者
   addSub(sub: Watcher) {
     this.subs.push(sub)
   }
 
+  // ! 删除观察者
   removeSub(sub: Watcher) {
     remove(this.subs, sub)
   }
@@ -45,13 +47,13 @@ export default class Dep {
     // stabilize the subscriber list first
     const subs = this.subs.slice()
 
-    // ! 同步执行，订阅器依赖需要排序
-    // ! 按照顺序来执行（不是异步队列全部入队后一起执行），主要用于开发环境中测试代码
+    // ! 同步执行观察者，不是异步队列全部入队后一起执行
+    // ! 需要按照顺序来执行，主要用于开发环境中测试代码
     if (process.env.NODE_ENV !== 'production' && !config.async) {
       // subs aren't sorted in scheduler if not running async
       // we need to sort them now to make sure they fire in correct
       // order
-      subs.sort((a, b) => a.id - b.id)
+      subs.sort((a, b) => a.id - b.id) // ! id 升序排序
     }
     for (let i = 0, l = subs.length; i < l; i++) {
       subs[i].update()
@@ -65,13 +67,13 @@ export default class Dep {
 Dep.target = null // ! 初始化为 null
 const targetStack = []
 
-// ! 把 target 放入栈中
+// ! 把 target 放入栈中，并赋值 Dep.target
 export function pushTarget(target: ?Watcher) {
   targetStack.push(target)
   Dep.target = target
 }
 
-// ! 把 target 移除栈中
+// ! 把 target 移出栈中，Dep.target 变成栈的最后一个元素 或者 undefined
 export function popTarget() {
   targetStack.pop()
   Dep.target = targetStack[targetStack.length - 1]

@@ -2,7 +2,7 @@
 
 import { toArray } from '../util/index'
 
-// ! 初始化 Global use ，添加用于安装插件的方法 use
+// ! 初始化 Global use ，添加用于安装插件的函数 use
 export function initUse(Vue: GlobalAPI) {
   Vue.use = function(plugin: Function | Object) {
     const installedPlugins =

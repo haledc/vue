@@ -13,7 +13,7 @@ import { extend, mergeOptions, formatComponentName } from '../util/index'
 let uid = 0
 
 export function initMixin(Vue: Class<Component>) {
-  // ! 初始化的方法
+  // ! 初始化的函数
   Vue.prototype._init = function(options?: Object) {
     const vm: Component = this
     // a uid
@@ -25,7 +25,7 @@ export function initMixin(Vue: Class<Component>) {
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
       startTag = `vue-perf-start:${vm._uid}`
       endTag = `vue-perf-end:${vm._uid}`
-      mark(startTag)
+      mark(startTag) // ! 性能追踪前标记
     }
 
     // a flag to avoid this being observed
@@ -55,17 +55,17 @@ export function initMixin(Vue: Class<Component>) {
     vm._self = vm
     initLifecycle(vm) // ! 初始化生命周期相关配置 存储本身实例到父节点 新增属性 $parent $root $children $refs 等
     initEvents(vm) // ! 初始化事件相关配置 更新 listeners
-    initRender(vm) // ! 初始化渲染, 创建VNode 另新增属性 $attrs 和 $listeners
-    callHook(vm, 'beforeCreate') // ! 调用 beforeCreate 钩子函数
+    initRender(vm) // ! 初始化渲染, 创建 VNode 另新增属性 $attrs 和 $listeners
+    callHook(vm, 'beforeCreate') // ! 执行 beforeCreate 钩子函数
     initInjections(vm) // ! 初始化 Injections resolve injections before data/props 
-    initState(vm) // ! 初始化状态 按顺序 props => methods => data => computed  => watch
+    initState(vm) // ! 初始化状态，响应式相关 按顺序 props => methods => data => computed  => watch
     initProvide(vm) // ! 初始化 Provide resolve provide after data/props 
-    callHook(vm, 'created') // ! 调用 created 钩子函数
+    callHook(vm, 'created') // ! 执行 created 钩子函数
 
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
       vm._name = formatComponentName(vm, false)
-      mark(endTag)
+      mark(endTag) // ! 性能追踪后标记
       measure(`vue ${vm._name} init`, startTag, endTag)
     }
 
@@ -76,7 +76,7 @@ export function initMixin(Vue: Class<Component>) {
   }
 }
 
-// ! 初始化内部组件的方法
+// ! 初始化内部组件的函数
 export function initInternalComponent(
   vm: Component,
   options: InternalComponentOptions

@@ -52,7 +52,7 @@ export class Observer {
       } else {
         copyAugment(value, arrayMethods, arrayKeys)
       }
-      this.observeArray(value) // ! 监听数组
+      this.observeArray(value) // ! 再次监听数组，监听一些嵌套的数组
     } else {
       this.walk(value) // ! 监听对象
     }
@@ -117,20 +117,20 @@ export function observe(value: any, asRootData: ?boolean): Observer | void {
   }
   let ob: Observer | void
 
-  // ! 已经是监听对象了，返回它，不用重复监听
+  // ! 已经是监听对象了，不需要重复监听，直接获取 __ob__ 属性
   if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
     ob = value.__ob__
   } else if (
     shouldObserve &&
     !isServerRendering() &&
     (Array.isArray(value) || isPlainObject(value)) &&
-    Object.isExtensible(value) && // ! 对象可扩展
+    Object.isExtensible(value) && // ! 对象可扩展，没有被 freeze
     !value._isVue // ! 不是 Vue 实例
   ) {
     ob = new Observer(value) // ! 实例化一个监听对象
   }
 
-  // ! 对象时根实例数据对象时， vmCount++
+  // ! 对象是根实例数据对象时， vmCount++
   if (asRootData && ob) {
     ob.vmCount++
   }
@@ -139,7 +139,7 @@ export function observe(value: any, asRootData: ?boolean): Observer | void {
 
 /**
  * Define a reactive property on an Object.
- * ! 定义响应式的方法
+ * ! 定义响应式的函数
  */
 export function defineReactive(
   obj: Object,
@@ -163,7 +163,7 @@ export function defineReactive(
     val = obj[key]
   }
 
-  let childOb = !shallow && observe(val) // ! 监听孩子属性
+  let childOb = !shallow && observe(val) // ! 当 val 不为 undefined 时深度监听
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
@@ -172,9 +172,9 @@ export function defineReactive(
       if (Dep.target) {
         dep.depend() // ! 添加进订阅器，依赖收集
         if (childOb) {
-          childOb.dep.depend()
+          childOb.dep.depend() // ! 依赖收集
           if (Array.isArray(value)) {
-            dependArray(value)
+            dependArray(value) // ! 数组手动收集依赖
           }
         }
       }
@@ -183,7 +183,7 @@ export function defineReactive(
     set: function reactiveSetter(newVal) {
       const value = getter ? getter.call(obj) : val // ! 获取值 (旧值)
       /* eslint-disable no-self-compare */
-      // ! NaN === NaN false
+      // !                    NaN === NaN false
       if (newVal === value || (newVal !== newVal && value !== value)) {
         return
       }
@@ -220,17 +220,17 @@ export function set(target: Array<any> | Object, key: any, val: any): any {
     )
   }
 
-  // ! target 是数组时
+  // ! target 是数组且 key 有效时
   if (Array.isArray(target) && isValidArrayIndex(key)) {
-    target.length = Math.max(target.length, key) // ! 修改数组长度
-    target.splice(key, 1, val) // ! 使用重写的 splice 触发响应 (注意如果 key 大于原数组长度时 splice 无效)
+    target.length = Math.max(target.length, key) // ! 修改数组长度 key, 否则大于原数组长度时 splice 无效
+    target.splice(key, 1, val) // ! 使用重写的 splice 增加或者替换元素，并触发响应
     return val
   }
 
   // ! key 已经存在对象 target 且不在它的原型中时
   if (key in target && !(key in Object.prototype)) {
-    target[key] = val // ! 修改原来的值
-    return val // ! 直接返回 因为本来已经监听，会自动触发
+    target[key] = val // ! 直接修改原来的值，会自动触发 setter
+    return val 
   }
 
   // ! 获取原对象的 __ob__ 属性
@@ -268,7 +268,7 @@ export function del(target: Array<any> | Object, key: any) {
     )
   }
   if (Array.isArray(target) && isValidArrayIndex(key)) {
-    target.splice(key, 1) // ! splice 删除触发响应
+    target.splice(key, 1) // ! splice 删除元素，并触发响应
     return
   }
   const ob = (target: any).__ob__
@@ -286,8 +286,9 @@ export function del(target: Array<any> | Object, key: any) {
   if (!hasOwn(target, key)) {
     return
   }
-  delete target[key]
+  delete target[key] // ! 删除目标的字段
 
+  // ! 目标不是响应式，不处理
   if (!ob) {
     return
   }
@@ -297,14 +298,14 @@ export function del(target: Array<any> | Object, key: any) {
 /**
  * Collect dependencies on array elements when the array is touched, since
  * we cannot intercept array element access like property getters.
- * ! 数组元素依赖收集 (defineProperty 无法定义数组索引)
+ * ! 数组元素依赖收集 (数组的索引是非响应式的，defineProperty 无法定义数组索引)
  */
 function dependArray(value: Array<any>) {
   for (let e, i = 0, l = value.length; i < l; i++) {
     e = value[i]
-    e && e.__ob__ && e.__ob__.dep.depend() // ! 手动依赖收集
+    e && e.__ob__ && e.__ob__.dep.depend() // ! 收集依赖
     if (Array.isArray(e)) {
-      dependArray(e)
+      dependArray(e) // ! 递归调用
     }
   }
 }

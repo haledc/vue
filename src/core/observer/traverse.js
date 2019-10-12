@@ -10,7 +10,7 @@ const seenObjects = new Set() // ! 存储 id 值的集合
  * Recursively traverse an object to evoke all converted
  * getters, so that every nested property inside the object
  * is collected as a "deep" dependency.
- * ! 深层递归遍历
+ * ! 递归遍历，用于深度观察
  * ! 对子对象的访问，会触发它们的 getter 过程，这样就可以收集到所有的依赖
  */
 export function traverse(val: any) {
@@ -31,7 +31,7 @@ function _traverse(val: any, seen: SimpleSet) {
   if (val.__ob__) {
     const depId = val.__ob__.dep.id
 
-    // ! 已经遍历的对象，不会再遍历，避免循环引用
+    // ! 已经遍历的对象，不会再遍历，避免访问重复的对象，避免循环引用
     if (seen.has(depId)) {
       return
     }

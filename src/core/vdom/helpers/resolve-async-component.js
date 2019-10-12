@@ -37,7 +37,7 @@ export function createAsyncPlaceholder(
   return node // ! 返回当前节点
 }
 
-// ! 解析异步组件的方法
+// ! 解析异步组件的函数
 export function resolveAsyncComponent(
   factory: Function,
   baseCtor: Class<Component>

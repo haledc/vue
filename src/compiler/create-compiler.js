@@ -6,12 +6,12 @@ import { createCompileToFunctionFn } from './to-function'
 
 export function createCompilerCreator(baseCompile: Function): Function {
   return function createCompiler(baseOptions: CompilerOptions) {
-    // ! 编译模板字符串的方法
+    // ! 编译模板字符串的函数 => 对 baseCompile 进行一层包装，使其适用于 web 平台
     function compile(
       template: string,
       options?: CompilerOptions // ! 用户定制选项
     ): CompiledResult {
-      const finalOptions = Object.create(baseOptions) // ! 创建最终的编译选项参数
+      const finalOptions = Object.create(baseOptions) // ! 最终的编译选项参数
       const errors = [] // ! 错误信息集合
       const tips = [] // ! 提示信息集合
 
@@ -19,7 +19,7 @@ export function createCompilerCreator(baseCompile: Function): Function {
         ;(tip ? tips : errors).push(msg)
       }
 
-      // ! 将用户定制选项配置合并到最终的选项参数中
+      // ! 将用户设置的选项配置合并到最终的选项参数中
       if (options) {
         if (
           process.env.NODE_ENV !== 'production' &&
@@ -42,7 +42,7 @@ export function createCompilerCreator(baseCompile: Function): Function {
           }
         }
         // merge custom modules
-        // ! 合并数组
+        // ! 合并 modules 选项，数组类型
         if (options.modules) {
           finalOptions.modules = (baseOptions.modules || []).concat(
             options.modules
@@ -50,7 +50,7 @@ export function createCompilerCreator(baseCompile: Function): Function {
         }
 
         // merge custom directives
-        // ! 合并对象
+        // ! 合并 directives 选项，对象类型
         if (options.directives) {
           finalOptions.directives = extend(
             Object.create(baseOptions.directives || null),
@@ -58,7 +58,7 @@ export function createCompilerCreator(baseCompile: Function): Function {
           )
         }
         // copy other options
-        // ! 其他的直接复制进去
+        // ! 其他直接复制进去
         for (const key in options) {
           if (key !== 'modules' && key !== 'directives') {
             finalOptions[key] = options[key]
@@ -68,19 +68,22 @@ export function createCompilerCreator(baseCompile: Function): Function {
 
       finalOptions.warn = warn
 
-      const compiled = baseCompile(template.trim(), finalOptions) // ! 具体的编译方法，生成渲染函数字符串
+      // ! 具体的编译方法，生成 AST render staticRenderFns 组成的对象返回值
+      const compiled = baseCompile(template.trim(), finalOptions)
 
       if (process.env.NODE_ENV !== 'production') {
-        detectErrors(compiled.ast, warn)
+        detectErrors(compiled.ast, warn) // ! 检查 AST 语法，判断编译前的模板字符串是否有语法错误
       }
+
+      // ! 把错误信息和提示信息放入到返回的对象中
       compiled.errors = errors
       compiled.tips = tips
       return compiled
     }
 
     return {
-      compile, // ! 生成渲染函数字符串
-      compileToFunctions: createCompileToFunctionFn(compile) // ! 生成真正的渲染函数
+      compile, // ! 编译模板字符串的函数，模板字符串 => 渲染函数字符串
+      compileToFunctions: createCompileToFunctionFn(compile) // ! 生成渲染函数的函数，渲染函数字符串 => 渲染函数
     }
   }
 }

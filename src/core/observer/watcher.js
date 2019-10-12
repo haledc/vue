@@ -57,22 +57,22 @@ export default class Watcher {
     vm._watchers.push(this) // ! 把自己添加进去
     // options
     if (options) {
-      this.deep = !!options.deep // ! 深度观察
-      this.user = !!options.user // ! 开发者
-      this.lazy = !!options.lazy // ! 懒观察，专为计算属性设置
-      this.sync = !!options.sync // ! 同步执行
-      this.before = options.before // ! 触发更新之前
+      this.deep = !!options.deep // ! 是否深度观察
+      this.user = !!options.user // ! 是否是开发者定义的，主要指 watch $watch 中自定义的函数
+      this.lazy = !!options.lazy // ! 是否开启懒观察，专为计算属性设置
+      this.sync = !!options.sync // ! 是否同步求值
+      this.before = options.before // ! 更新之前调用的钩子函数，比如调用 beforeUpdate 钩子函数 
     } else {
-      this.deep = this.user = this.lazy = this.sync = false // ! 默认为 false
+      this.deep = this.user = this.lazy = this.sync = false // ! 默认值为 false
     }
     this.cb = cb
     this.id = ++uid // uid for batching
-    this.active = true
+    this.active = true // ! 观察者实例默认是激活状态
     this.dirty = this.lazy // for lazy watchers
     this.deps = [] // ! 上一次添加的 Dep 实例数组
     this.newDeps = [] // ! 当前添加的 Dep 实例数组
-    this.depIds = new Set() // ! 上一次添加到 Dep 实例的 id 的集合
-    this.newDepIds = new Set() // ! 当前添加到 Dep 实例的 id 的集合
+    this.depIds = new Set() // ! 上一次添加到 Dep 实例的 id 的集合，不能重复
+    this.newDepIds = new Set() // ! 当前添加到 Dep 实例的 id 的集合，不能重复
     this.expression =
       process.env.NODE_ENV !== 'production' ? expOrFn.toString() : ''
     // parse expression for getter
@@ -93,22 +93,22 @@ export default class Watcher {
     }
 
     // ! 实例化最后，调用 get 获取值，并收集依赖
-    // ! 注意计算属性采用不同的处理方法
+    // ! 注意计算属性收集依赖的方法有一点差异，使用 evaluate 方法
     this.value = this.lazy ? undefined : this.get()
   }
 
   /**
    * Evaluate the getter, and re-collect dependencies.
-   * ! 获取值，依赖收集
+   * ! 获取值，触发依赖收集
    */
   get() {
-    pushTarget(this) // ! Dep.target 赋值为 this ，并放入维护的 targetStack 中
+    pushTarget(this) // ! Dep.target 赋值为观察者实例对象 ，并放入维护的 targetStack 中
     let value
     const vm = this.vm
     try {
       // ! 执行 getter 获取值
-      // ! 相当于执行 updateComponent 函数 => 即 vm._update(vm._render(), hydrating)
-      // ! 而 vm._render()；对 vm 上的数据访问，触发数据对象的 getter 收集依赖  => Dep.target => this
+      // ! 相当于执行 updateComponent 函数 => 即执行 vm._update(vm._render(), hydrating)
+      // ! 而执行 vm._render => 对 vm 上的数据访问 => 触发 getter => 收集依赖
       value = this.getter.call(vm, vm)
     } catch (e) {
       if (this.user) {
@@ -119,7 +119,7 @@ export default class Watcher {
     } finally {
       // "touch" every property so they are all tracked as
       // dependencies for deep watching
-      // ! 如果是深度观察 => 用于 watch 属性
+      // ! 如果是深度观察 => 用于 watch 选项
       if (this.deep) {
         traverse(value) // ! 递归去访问 value，触发它所有子项的 getter
       }
@@ -127,23 +127,23 @@ export default class Watcher {
       // ! 把 Dep.target 恢复成上一个状态
       // ! 当前 vm 的数据依赖收集已经完成，那么对应的渲染 Dep.target 也需要改变
       popTarget()
-      this.cleanupDeps() // ! 清空依赖，避免重复收集
+      this.cleanupDeps() // ! 每次求值后清空依赖，避免重复收集
     }
-    return value
+    return value // ! 渲染函数观察者的返回值永远都是 undefined
   }
 
   /**
    * Add a dependency to this directive.
-   * ! 依赖收集的方法
+   * ! 依赖收集
    */
   addDep(dep: Dep) {
     const id = dep.id
-    // ! 需要先判定 new 的是否已经收集，就不用收集
+    // ! 需要先判定 new 中是否已经收集，如果没有收集才收集，避免重复收集依赖
     if (!this.newDepIds.has(id)) {
       this.newDepIds.add(id)
       this.newDeps.push(dep)
       if (!this.depIds.has(id)) {
-        dep.addSub(this)
+        dep.addSub(this) // ! 把观察者实例添加到订阅器的 subs 中
       }
     }
   }
@@ -178,15 +178,15 @@ export default class Watcher {
    */
   update() {
     /* istanbul ignore else */
-    // ! 如果有懒观察  =>  用于计算属性的更新
+    // ! 如果启动懒惰模式  => 更新 dirty 为 true，说明可以更新计算属性的值
     if (this.lazy) {
-      this.dirty = true // ! 设置 true ，更新计算属性的值（计算属性只有在依赖的值更新后，才会重新求值）
+      this.dirty = true
 
-      // ! 同步更新，不需要在 nextTick 后执行 ，而是同步执行 => 用于 watch 属性
+      // ! 同步执行，不需要调用 nextTick 执行观察者 => 用于 watch 自定义的观察者
     } else if (this.sync) {
       this.run()
 
-      // ! 异步更新
+      // ! 异步执行，需要调用 nextTick 执行观察者 => 用于执行自动收集的依赖
     } else {
       queueWatcher(this) // ! 使用异步队列更新
     }
@@ -199,7 +199,7 @@ export default class Watcher {
    */
   run() {
     if (this.active) {
-      const value = this.get() // ! 重新获取值 => 执行 getter => 执行 updateComponent => 返回 undefined
+      const value = this.get() // ! 获取值 => 执行 getter，如果执行的是 updateComponent，返回 undefined
       if (
         value !== this.value ||
         // Deep watchers and watchers on Object/Arrays should fire even
@@ -209,12 +209,12 @@ export default class Watcher {
         this.deep
       ) {
         // set new value
-        const oldValue = this.value // ! 旧值
-        this.value = value // ! 新值
-        // ! 设置 user 为 true 时， 会处理错误 => 用于 watch 属性
+        const oldValue = this.value // ! 缓存旧值
+        this.value = value // ! 旧值更新为新值
+        // ! 处理用户定义的观察者，比如 watch $watch
         if (this.user) {
           try {
-            this.cb.call(this.vm, value, oldValue) // ! 传入新旧值，执行回调函数更新 view 的值， 下同
+            this.cb.call(this.vm, value, oldValue) // ! 传入新旧值，执行回调函数更新 view 的值
           } catch (e) {
             handleError(e, this.vm, `callback for watcher "${this.expression}"`)
           }
@@ -228,16 +228,16 @@ export default class Watcher {
   /**
    * Evaluate the value of the watcher.
    * This only gets called for lazy watchers.
-   * ! 手动更新计算属性的值
+   * ! 更新计算属性的值
    */
   evaluate() {
-    this.value = this.get() // ! 手动获取新值
-    this.dirty = false // ! 之后重新设置为 false
+    this.value = this.get() // ! 获取计算属性的新值，并触发它所依赖的响应式对象收集这个计算属性观察者
+    this.dirty = false // ! 更新计算属性的值后重新设置为 false，这时再次访问计算属性时，它就不会再求值了
   }
 
   /**
    * Depend on all deps collected by this watcher.
-   * ! 加入观测者
+   * ! 加入观察者，依赖收集
    */
   depend() {
     let i = this.deps.length
@@ -248,7 +248,7 @@ export default class Watcher {
 
   /**
    * Remove self from all dependencies' subscriber list.
-   * ! 解除观察者
+   * ! 删除观察者
    */
   teardown() {
     if (this.active) {
@@ -262,7 +262,7 @@ export default class Watcher {
       while (i--) {
         this.deps[i].removeSub(this)
       }
-      this.active = false // ! 设置非激活状态
+      this.active = false // ! 设置观察者实例是非激活状态
     }
   }
 }

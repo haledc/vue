@@ -57,17 +57,17 @@ let platformMustUseProp
 let platformGetTagNamespace
 let maybeComponent
 
-// ! 创建 AST 元素的方法，返回一个 js 普通对象
+// ! 创建 AST 元素的函数，生成一个 js 普通对象
 export function createASTElement(
   tag: string,
   attrs: Array<ASTAttr>,
   parent: ASTElement | void
 ): ASTElement {
   return {
-    type: 1, // ! 普通元素
+    type: 1, // ! 类型，1 是普通元素
     tag, // ! 标签名
     attrsList: attrs, // ! 属性列表
-    attrsMap: makeAttrsMap(attrs), // ! 属性映射
+    attrsMap: makeAttrsMap(attrs), // ! 属性映射表
     rawAttrsMap: {},
     parent, // ! 父的 AST 元素
     children: [] // ! 子 AST 元素集合
@@ -76,7 +76,7 @@ export function createASTElement(
 
 /**
  * Convert HTML string to AST.
- * ! 解析方法 模板字符串 => AST
+ * ! 模板字符串解析函数，模板字符串 => AST
  */
 export function parse(
   template: string,
@@ -208,7 +208,7 @@ export function parse(
     }
   }
 
-  // ! 解析 HTML 模板 => 词法分析
+  // ! 解析 HTML 模板，词法分析
   parseHTML(template, {
     warn,
     expectHTML: options.expectHTML,
@@ -218,7 +218,7 @@ export function parse(
     shouldDecodeNewlinesForHref: options.shouldDecodeNewlinesForHref,
     shouldKeepComment: options.comments,
     outputSourceRange: options.outputSourceRange,
-    // ! 处理开始标签
+    // ! 处理开始标签的方法
     start(tag, attrs, unary, start, end) {
       // check namespace.
       // inherit parent ns if there is one
@@ -312,8 +312,7 @@ export function parse(
         closeElement(element)
       }
     },
-
-    // ! 处理闭合标签
+    // ! 处理闭合标签的方法
     end(tag, start, end) {
       const element = stack[stack.length - 1]
       // pop stack
@@ -325,7 +324,7 @@ export function parse(
       closeElement(element)
     },
 
-    // ! 处理文本内容
+    // ! 处理文本内容的方法
     chars(text: string, start: number, end: number) {
       if (!currentParent) {
         if (process.env.NODE_ENV !== 'production') {
@@ -404,6 +403,7 @@ export function parse(
         }
       }
     },
+    // ! 处理注释节点的方法
     comment(text: string, start, end) {
       // adding anyting as a sibling to the root node is forbidden
       // comments should still be allowed, but ignored

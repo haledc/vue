@@ -29,7 +29,7 @@ export function setActiveInstance(vm: Component) {
   }
 }
 
-// ! 初始化生命周期相关配置的方法
+// ! 初始化生命周期相关配置的函数
 export function initLifecycle(vm: Component) {
   const options = vm.$options
 
@@ -143,7 +143,7 @@ export function lifecycleMixin(Vue: Class<Component>) {
   }
 }
 
-// ! 挂载组件的方法
+// ! 挂载组件的函数
 export function mountComponent(
   vm: Component,
   el: ?Element,
@@ -151,7 +151,7 @@ export function mountComponent(
 ): Component {
   vm.$el = el // ! 更新 $el 属性
   if (!vm.$options.render) {
-    vm.$options.render = createEmptyVNode // ! 生成一个空的 VNode
+    vm.$options.render = createEmptyVNode // ! render 会生成一个空的 VNode
     if (process.env.NODE_ENV !== 'production') {
       /* istanbul ignore if */
       if (
@@ -175,7 +175,7 @@ export function mountComponent(
   }
   callHook(vm, 'beforeMount') // ! 挂载组件之前，调用 beforeMount 钩子函数
 
-  // ! 更新组件的方法
+  // ! 更新组件的函数
   let updateComponent
   /* istanbul ignore if */
   if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
@@ -185,19 +185,19 @@ export function mountComponent(
       const startTag = `vue-perf-start:${id}`
       const endTag = `vue-perf-end:${id}`
 
-      mark(startTag) // ! 开发环境性能统计 下同
-      const vnode = vm._render() // ! 生成虚拟节点
+      mark(startTag) // ! 开始统计 _render 函数性能 
+      const vnode = vm._render() // ! 生成 VNode
       mark(endTag)
       measure(`vue ${name} render`, startTag, endTag)
 
-      mark(startTag)
-      vm._update(vnode, hydrating) // ! 将虚拟节点渲染到真实 DOM 中
+      mark(startTag) // ! 开始统计 _update 函数性能 
+      vm._update(vnode, hydrating) // ! 将 VNode 渲染到真实 DOM 中
       mark(endTag)
       measure(`vue ${name} patch`, startTag, endTag)
     }
   } else {
     updateComponent = () => {
-      vm._update(vm._render(), hydrating)
+      vm._update(vm._render(), hydrating) // ! 把 _render 生成的 VNode 渲染成真实的 DOM
     }
   }
 
@@ -207,12 +207,12 @@ export function mountComponent(
   // ! 生成观察者实例
   new Watcher(
     vm,
-    updateComponent,
+    updateComponent, // ! 更新组件的函数，执行时 => 执行 vm.$options.render => getter => 收集依赖
     noop,
     {
       before() {
         if (vm._isMounted && !vm._isDestroyed) {
-          callHook(vm, 'beforeUpdate') // ! 更新组件之前，调用 beforeUpdate 钩子函数
+          callHook(vm, 'beforeUpdate') // ! 传入 beforeUpdate 生命周期钩子函数，在更新前组件前调用
         }
       }
     },

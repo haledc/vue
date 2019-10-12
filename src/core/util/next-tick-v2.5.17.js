@@ -5,13 +5,13 @@ import { noop } from 'shared/util'
 import { handleError } from './error'
 import { isIOS, isNative } from './env'
 
-const callbacks = []
-let pending = false
+const callbacks = [] // ! 回调函数组成的数组
+let pending = false // ! 队列是否需要等待刷新，false 表示队列为空，不用等待
 
-// ! 执行 callbacks 所有的回调
+// ! 执行 callbacks 的所有的回调函数
 function flushCallbacks() {
   pending = false // ! 重置 pending
-  const copies = callbacks.slice(0)
+  const copies = callbacks.slice(0) // ! 拷贝副本
   callbacks.length = 0 // ! 清空 callbacks
   // ! 执行拷贝副本的所有回调函数
   for (let i = 0; i < copies.length; i++) {
@@ -36,7 +36,8 @@ let useMacroTask = false // ! 是否使用宏任务回调
 // in IE. The only polyfill that consistently queues the callback after all DOM
 // events triggered in the same loop is by using MessageChannel.
 /* istanbul ignore if */
-// ! 宏任务实现 setImmediate => MessageChannel => setTimeout （性能从高到低）
+// ! 实现宏任务
+// ! 宏任务实现顺序 setImmediate => MessageChannel => setTimeout （性能从高到低）
 // ! 检测是否支持原生 setImmediate (目前只有高版本 IE 和 Edge 支持)
 if (typeof setImmediate !== 'undefined' && isNative(setImmediate)) {
   macroTimerFunc = () => {
@@ -65,8 +66,8 @@ if (typeof setImmediate !== 'undefined' && isNative(setImmediate)) {
 
 // Determine microtask defer implementation.
 /* istanbul ignore next, $flow-disable-line */
-// ! 微任务实现 Promise => 降级成宏任务
-// ! 检测是否支持原生 Promise，使用 Promise 实现微任务
+// ! 实现微任务
+// ! 微任务实现顺序 Promise => 转宏任务
 if (typeof Promise !== 'undefined' && isNative(Promise)) {
   const p = Promise.resolve()
   microTimerFunc = () => {
@@ -80,7 +81,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   }
 } else {
   // fallback to macro
-  microTimerFunc = macroTimerFunc // ! 不支持 Promise， 微任务降级成宏任务
+  microTimerFunc = macroTimerFunc // ! 不支持 Promise，微任务降级成宏任务
 }
 
 /**
@@ -103,7 +104,7 @@ export function withMacroTask(fn: Function): Function {
 export function nextTick(cb?: Function, ctx?: Object) {
   let _resolve
 
-  // ! 把 cb 放入 callbacks 数组中
+  // ! 把 cb 包装成一个函数，并放入 callbacks 数组中
   callbacks.push(() => {
     if (cb) {
       try {
@@ -116,13 +117,13 @@ export function nextTick(cb?: Function, ctx?: Object) {
     }
   })
 
-  // ! pending 队列是否等待刷新
+  // ! 判断对象是否等待刷新
   if (!pending) {
     pending = true
     if (useMacroTask) {
-      macroTimerFunc() // ! 执行宏任务回调函数 注册回调函数为宏任务
+      macroTimerFunc() // ! 执行宏任务回调函数
     } else {
-      microTimerFunc() // ! 执行微任务回调函数 注册回调函数为微任务
+      microTimerFunc() // ! 执行微任务回调函数
     }
   }
 

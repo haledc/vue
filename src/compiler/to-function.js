@@ -9,7 +9,7 @@ type CompiledFunctionResult = {
   staticRenderFns: Array<Function>
 }
 
-// ! 生成渲染函数的方法，渲染函数字符串 => 渲染函数
+// ! 生成渲染函数的函数，渲染函数字符串 => 渲染函数
 function createFunction(code, errors) {
   try {
     return new Function(code)
@@ -19,7 +19,7 @@ function createFunction(code, errors) {
   }
 }
 
-// ! 创建编译方法的方法
+// ! 创建编译方法的函数
 export function createCompileToFunctionFn(compile: Function): Function {
   const cache = Object.create(null) // ! 创建缓存，由下面的闭包函数引用
 
@@ -34,10 +34,11 @@ export function createCompileToFunctionFn(compile: Function): Function {
     delete options.warn
 
     /* istanbul ignore if */
+    // ! 测试能否使用 new Function(), 模板字符串编译成渲染函数依赖 new Function()
     if (process.env.NODE_ENV !== 'production') {
       // detect possible CSP restriction
       try {
-        new Function('return 1') // ! 测试能否使用 new Function(), 模板字符串编译成渲染函数依赖 new Function()
+        new Function('return 1') 
       } catch (e) {
         if (e.toString().match(/unsafe-eval|CSP/)) {
           warn(
@@ -63,6 +64,7 @@ export function createCompileToFunctionFn(compile: Function): Function {
     const compiled = compile(template, options) // ! 编译模板，模板字符串 => 渲染函数字符串
 
     // check compilation errors/tips
+    // ! 打印编译过程的错误
     if (process.env.NODE_ENV !== 'production') {
       // ! 检查是否存在编译错误信息
       if (compiled.errors && compiled.errors.length) {
@@ -95,8 +97,8 @@ export function createCompileToFunctionFn(compile: Function): Function {
 
     // turn code into functions
     const res = {}
-    const fnGenErrors = [] // ! 创建函数时生成的错误信息的集合
-    res.render = createFunction(compiled.render, fnGenErrors) // ! 生成渲染函数
+    const fnGenErrors = [] // ! 生成函数时发生的错误信息的集合，主要是编译器本身的错误
+    res.render = createFunction(compiled.render, fnGenErrors) // ! 生成渲染函数，渲染函数字符串 => 渲染函数
     res.staticRenderFns = compiled.staticRenderFns.map(code => {
       return createFunction(code, fnGenErrors)
     }) // ! 生成静态渲染函数的数组 => 渲染优化
@@ -105,6 +107,7 @@ export function createCompileToFunctionFn(compile: Function): Function {
     // this should only happen if there is a bug in the compiler itself.
     // mostly for codegen development use
     /* istanbul ignore if */
+    // ! 打印生成渲染函数中的错误
     if (process.env.NODE_ENV !== 'production') {
       if ((!compiled.errors || !compiled.errors.length) && fnGenErrors.length) {
         warn(
@@ -117,6 +120,6 @@ export function createCompileToFunctionFn(compile: Function): Function {
       }
     }
 
-    return (cache[key] = res) // ! 缓存并返回编译结果
+    return (cache[key] = res) // ! 缓存并返回编译结果 res
   }
 }

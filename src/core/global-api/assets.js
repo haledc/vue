@@ -3,7 +3,7 @@
 import { ASSET_TYPES } from 'shared/constants'
 import { isPlainObject, validateComponentName } from '../util/index'
 
-// ! 初始化注册 新增方法 Vue.component Vue.directive
+// ! 初始化注册 新增全局方法 Vue.component Vue.directive Vue.filter
 export function initAssetRegisters(Vue: GlobalAPI) {
   /**
    * Create asset registration methods.

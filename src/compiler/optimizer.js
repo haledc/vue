@@ -36,7 +36,7 @@ function genStaticKeys(keys: string): Function {
   )
 }
 
-// ! 标记静态节点的方法
+// ! 标记静态节点的函数
 function markStatic(node: ASTNode) {
   node.static = isStatic(node) // ! 判断静态节点
   // ! 节点是普通元素
@@ -76,7 +76,7 @@ function markStatic(node: ASTNode) {
   }
 }
 
-// ! 标记静态根的方法
+// ! 标记静态根的函数
 function markStaticRoots(node: ASTNode, isInFor: boolean) {
   // ! 节点是普通元素
   if (node.type === 1) {
@@ -111,7 +111,7 @@ function markStaticRoots(node: ASTNode, isInFor: boolean) {
   }
 }
 
-// ! 判断静态节点的方法
+// ! 判断静态节点的函数
 function isStatic(node: ASTNode): boolean {
   // ! type 2 是表达式， 不是静态节点
   if (node.type === 2) {

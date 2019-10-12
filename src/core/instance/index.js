@@ -13,11 +13,11 @@ function Vue(options) {
   this._init(options) // ! 实例时，执行初始化方法，初始化所有的设置
 }
 
-// ! 新增方法和属性到 Vue 的原型对象中 （即 Vue 实例中可以使用到的方法）
+// ! 新增方法和属性到 Vue 的原型对象中 （即 Vue 实例中可以使用到的函数）
 initMixin(Vue) // ! 混入初始化方法 _init
 stateMixin(Vue) // ! 混入 $data 和 $props 属性，$del $delete $$watch 状态相关方法
-eventsMixin(Vue) // ! 混入 $on $once $off $emit 事件相关的方法
-lifecycleMixin(Vue) // ! 混入 _update $forceUpdate $destroy 生命周期相关的方法
-renderMixin(Vue) // ! 混入大量渲染相关的方法 包括 $nextTick _render 等等
+eventsMixin(Vue) // ! 混入 $on $once $off $emit 事件相关的函数
+lifecycleMixin(Vue) // ! 混入 _update $forceUpdate $destroy 生命周期相关的函数
+renderMixin(Vue) // ! 混入大量渲染相关的函数 包括 $nextTick _render 等等
 
 export default Vue
