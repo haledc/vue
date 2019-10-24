@@ -5,7 +5,7 @@
 /*!
  * HTML Parser By John Resig (ejohn.org)
  * Modified by Juriy "kangax" Zaytsev
- * Original code by Erik Arvidsson, Mozilla Public License
+ * Original code by Erik Arvidsson (MPL-1.1 OR Apache-2.0 OR GPL-2.0-or-later)
  * http://erik.eae.net/simplehtmlparser/simplehtmlparser.js
  */
 
@@ -36,8 +36,7 @@ const endTag = new RegExp(`^<\\/${qnameCapture}[^>]*>`)
 
 // ! DOCTYPE 类型
 const doctype = /^<!DOCTYPE [^>]+>/i
-// #7298: escape - to avoid being pased as HTML comment when inlined in page
-
+// #7298: escape - to avoid being passed as HTML comment when inlined in page
 // ! 注释节点
 const comment = /^<!\--/
 

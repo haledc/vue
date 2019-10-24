@@ -4,7 +4,7 @@ import type Watcher from './watcher'
 import config from '../config'
 import { callHook, activateChildComponent } from '../instance/lifecycle'
 
-import { warn, nextTick, devtools, inBrowser } from '../util/index'
+import { warn, nextTick, devtools, inBrowser, isIE } from '../util/index'
 
 export const MAX_UPDATE_COUNT = 100
 
@@ -43,16 +43,19 @@ let getNow: () => number = Date.now
 // timestamp can either be hi-res (relative to page load) or low-res
 // (relative to UNIX epoch), so in order to compare time we have to use the
 // same timestamp type when saving the flush timestamp.
-if (inBrowser) {
+// All IE versions use low-res event timestamps, and have problematic clock
+// implementations (#9632)
+if (inBrowser && !isIE) {
   const performance = window.performance
   if (
     performance &&
     typeof performance.now === 'function' &&
-    document.createEvent('Event').timeStamp <= performance.now()
+    getNow() > document.createEvent('Event').timeStamp
   ) {
-    // if the event timestamp is bigger than the hi-res timestamp
-    // (which is evaluated AFTER) it means the event is using a lo-res timestamp,
-    // and we need to use the lo-res version for event listeners as well.
+    // if the event timestamp, although evaluated AFTER the Date.now(), is
+    // smaller than it, it means the event is using a hi-res timestamp,
+    // and we need to use the hi-res version for event listener timestamps as
+    // well.
     getNow = () => performance.now()
   }
 }
@@ -174,7 +177,7 @@ export function queueWatcher(watcher: Watcher) {
       queue.splice(i + 1, 0, watcher) // ! 从后面开始查找，插入到第一个比它 id 小的元素后面
     }
 
-    // queue the flush 
+    // queue the flush
     // ! waiting 标识，保证只执行一次
     if (!waiting) {
       waiting = true

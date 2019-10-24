@@ -393,9 +393,8 @@ export function createPatchFunction(backend) {
       }
     }
   }
-
   // ! 删除虚拟节点的函数
-  function removeVnodes(parentElm, vnodes, startIdx, endIdx) {
+  function removeVnodes(vnodes, startIdx, endIdx) {
     // ! 遍历要删除的节点
     for (; startIdx <= endIdx; ++startIdx) {
       const ch = vnodes[startIdx]
@@ -588,7 +587,7 @@ export function createPatchFunction(backend) {
         insertedVnodeQueue
       )
     } else if (newStartIdx > newEndIdx) {
-      removeVnodes(parentElm, oldCh, oldStartIdx, oldEndIdx)
+      removeVnodes(oldCh, oldStartIdx, oldEndIdx)
     }
   }
 
@@ -688,7 +687,7 @@ export function createPatchFunction(backend) {
         addVnodes(elm, null, ch, 0, ch.length - 1, insertedVnodeQueue) // ! 把新的子节点插入旧节点
         // ! 只有旧子节点，删除旧的子节点
       } else if (isDef(oldCh)) {
-        removeVnodes(elm, oldCh, 0, oldCh.length - 1)
+        removeVnodes(oldCh, 0, oldCh.length - 1)
         // ! 只有旧节点，而还是个文本节点，删除文本内容
       } else if (isDef(oldVnode.text)) {
         nodeOps.setTextContent(elm, '')
@@ -947,7 +946,7 @@ export function createPatchFunction(backend) {
         // destroy old node
         // ! 删除旧节点
         if (isDef(parentElm)) {
-          removeVnodes(parentElm, [oldVnode], 0, 0)
+          removeVnodes([oldVnode], 0, 0)
         } else if (isDef(oldVnode.tag)) {
           invokeDestroyHook(oldVnode)
         }
