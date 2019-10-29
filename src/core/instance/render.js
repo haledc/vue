@@ -93,10 +93,10 @@ export function renderMixin(Vue: Class<Component>) {
     return nextTick(fn, this)
   }
 
-  // ! _render 方法，返回一个虚拟 Node
+  // ! _render 方法 -> 调用 render 函数，生成 VNode -> return vm.$createElement(tag, data, children)
   Vue.prototype._render = function(): VNode {
     const vm: Component = this
-    const { render, _parentVnode } = vm.$options // ! 从配置中获取渲染方法和 _parentVnode 父虚拟节点
+    const { render, _parentVnode } = vm.$options // ! 从配置中获取 render 和 _parentVnode
 
     if (_parentVnode) {
       vm.$scopedSlots = normalizeScopedSlots(
@@ -108,7 +108,7 @@ export function renderMixin(Vue: Class<Component>) {
 
     // set parent vnode. this allows render functions to have access
     // to the data on the placeholder node.
-    vm.$vnode = _parentVnode // ! 指向父虚拟节点
+    vm.$vnode = _parentVnode // ! 存储父级 VNode
     // render self
     let vnode
     try {
@@ -116,7 +116,7 @@ export function renderMixin(Vue: Class<Component>) {
       // separately from one another. Nested component's render fns are called
       // when parent component is patched.
       currentRenderingInstance = vm
-      // ! 渲染虚拟 Node， 传入 vm.$createElement 方法
+      // ! 调用 render 函数，指向实例本身，并传入 vm.$createElement 方法作为参数
       vnode = render.call(vm._renderProxy, vm.$createElement)
     } catch (e) {
       handleError(e, vm, `render`)

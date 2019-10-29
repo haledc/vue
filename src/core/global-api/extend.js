@@ -4,24 +4,25 @@ import { ASSET_TYPES } from 'shared/constants'
 import { defineComputed, proxy } from '../instance/state'
 import { extend, mergeOptions, validateComponentName } from '../util/index'
 
-// 初始化 extend， 添加 extend 方法
+// ! 初始化 extend， 添加 extend 方法
 export function initExtend(Vue: GlobalAPI) {
   /**
    * Each instance constructor, including Vue, has a unique
    * cid. This enables us to create wrapped "child
    * constructors" for prototypal inheritance and cache them.
    */
-  Vue.cid = 0
-  let cid = 1
+  Vue.cid = 0 
+  let cid = 1 // ! 子类构造器 ID
 
   /**
    * Class inheritance
+   * ! extend 方法 -> 创建 Vue 子类
    */
   Vue.extend = function(extendOptions: Object): Function {
     extendOptions = extendOptions || {}
-    const Super = this // ! 根构造器
+    const Super = this // ! 根构造器 -> Vue
     const SuperId = Super.cid
-    const cachedCtors = extendOptions._Ctor || (extendOptions._Ctor = {}) // ! 构造器缓存
+    const cachedCtors = extendOptions._Ctor || (extendOptions._Ctor = {}) // ! 缓存
     if (cachedCtors[SuperId]) {
       return cachedCtors[SuperId] // ! 返回缓存
     }
@@ -31,15 +32,15 @@ export function initExtend(Vue: GlobalAPI) {
       validateComponentName(name)
     }
 
-    // ! 子构造器方法
+    // ! 生成子类
     const Sub = function VueComponent(options) {
-      this._init(options) // ! 初始化
+      this._init(options) // ! 初始化子类
     }
-    Sub.prototype = Object.create(Super.prototype) // ! 子构造器继承根构造器
+    Sub.prototype = Object.create(Super.prototype) // ! 继承根构造器 -> 原型连接
     Sub.prototype.constructor = Sub
     Sub.cid = cid++
-    Sub.options = mergeOptions(Super.options, extendOptions) // ! 合并父构造器的配置
-    Sub['super'] = Super
+    Sub.options = mergeOptions(Super.options, extendOptions) // ! 合并配置
+    Sub['super'] = Super // ! 存储父级
 
     // For props and computed properties, we define the proxy getters on
     // the Vue instances at extension time, on the extended prototype. This
@@ -52,7 +53,7 @@ export function initExtend(Vue: GlobalAPI) {
     }
 
     // allow further extension/mixin/plugin usage
-    // ! 继承 下同
+    // ! 继承父级属性
     Sub.extend = Super.extend
     Sub.mixin = Super.mixin
     Sub.use = Super.use

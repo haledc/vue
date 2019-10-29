@@ -18,7 +18,7 @@ import {
   invokeWithErrorHandling
 } from '../util/index'
 
-export let activeInstance: any = null
+export let activeInstance: any = null // ! 激活的实例（全局属性）
 export let isUpdatingChildComponent: boolean = false
 
 export function setActiveInstance(vm: Component) {
@@ -58,7 +58,7 @@ export function initLifecycle(vm: Component) {
 }
 
 export function lifecycleMixin(Vue: Class<Component>) {
-  // ! 更新；把虚拟节点渲染成真实节点
+  // ! _update 方法 -> 把 VNode 变成真实 DOM
   Vue.prototype._update = function(vnode: VNode, hydrating?: boolean) {
     const vm: Component = this
     const prevEl = vm.$el
@@ -67,13 +67,13 @@ export function lifecycleMixin(Vue: Class<Component>) {
     vm._vnode = vnode
     // Vue.prototype.__patch__ is injected in entry points
     // based on the rendering backend used.
-    // ! 重置 $el 属性的值
+    // ! patch（不同平台不同的方法），并重置 $el 属性的值
     if (!prevVnode) {
       // initial render
-      vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */) // ! 首次渲染成真实节点
+      vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */) // ! 首次渲染
     } else {
       // updates
-      vm.$el = vm.__patch__(prevVnode, vnode) // ! diff算法之后更新渲染
+      vm.$el = vm.__patch__(prevVnode, vnode) // ! diff 之后 patch
     }
     restoreActiveInstance()
     // update __vue__ reference

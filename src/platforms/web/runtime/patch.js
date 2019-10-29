@@ -9,4 +9,6 @@ import platformModules from 'web/runtime/modules/index'
 // built-in modules have been applied.
 const modules = platformModules.concat(baseModules)
 
+// ! 调用 core 中生成 patch 函数的方法，并传入 web 平台的选项配置和扩展模块
+// ! 生成 web 平台的 patch 函数
 export const patch: Function = createPatchFunction({ nodeOps, modules })

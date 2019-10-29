@@ -76,7 +76,7 @@ export function initMixin(Vue: Class<Component>) {
   }
 }
 
-// ! 初始化内部组件的函数
+// ! 初始化内部组件的方法
 export function initInternalComponent(
   vm: Component,
   options: InternalComponentOptions

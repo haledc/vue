@@ -1,8 +1,6 @@
 /* @flow */
 
-/**
- * ! 虚拟 Node 类
- */
+// ! VNode 类
 export default class VNode {
   tag: string | void
   data: VNodeData | void
@@ -33,9 +31,9 @@ export default class VNode {
   fnScopeId: ?string // functional scope id support
 
   constructor(
-    tag?: string, // ! 标签名
-    data?: VNodeData, // ! 数据
-    children?: ?Array<VNode>, // ! 子节点
+    tag?: string,
+    data?: VNodeData,
+    children?: ?Array<VNode>,
     text?: string,
     elm?: Node,
     context?: Component,
@@ -74,7 +72,7 @@ export default class VNode {
   }
 }
 
-// ! 创建空节点的函数
+// ! 创建空的VNode
 export const createEmptyVNode = (text: string = '') => {
   const node = new VNode()
   node.text = text
@@ -82,6 +80,7 @@ export const createEmptyVNode = (text: string = '') => {
   return node
 }
 
+// ! 创建文本 VNode
 export function createTextVNode(val: string | number) {
   return new VNode(undefined, undefined, undefined, String(val))
 }
@@ -90,6 +89,7 @@ export function createTextVNode(val: string | number) {
 // used for static nodes and slot nodes because they may be reused across
 // multiple renders, cloning them avoids errors when DOM manipulations rely
 // on their elm reference.
+// ! 克隆 VNode
 export function cloneVNode(vnode: VNode): VNode {
   const cloned = new VNode(
     vnode.tag,

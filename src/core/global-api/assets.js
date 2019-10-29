@@ -25,14 +25,14 @@ export function initAssetRegisters(Vue: GlobalAPI) {
         // ! 注册组件
         if (type === 'component' && isPlainObject(definition)) {
           definition.name = definition.name || id
-          definition = this.options._base.extend(definition) // ! 通过 extend 继承 Vue 的构造函数
+          definition = this.options._base.extend(definition) // ! 通过 extend 扩展生成子类
         }
 
         // ! 注册指令
         if (type === 'directive' && typeof definition === 'function') {
           definition = { bind: definition, update: definition }
         }
-        this.options[type + 's'][id] = definition // ! 挂载到全局
+        this.options[type + 's'][id] = definition // ! 挂载到全局的 options 中
         return definition
       }
     }

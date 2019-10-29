@@ -27,7 +27,7 @@ import {
 } from 'weex/runtime/recycle-list/render-component-template'
 
 // inline hooks to be invoked on component VNodes during patch
-// ! 组件钩子
+// ! 组件 VNode 钩子映射表 -> 在 patch 时执行
 const componentVNodeHooks = {
   init(vnode: VNodeWithData, hydrating: boolean): ?boolean {
     if (
@@ -39,7 +39,7 @@ const componentVNodeHooks = {
       const mountedNode: any = vnode // work around flow
       componentVNodeHooks.prepatch(mountedNode, mountedNode)
     } else {
-      // ! 创建组件的 Vue 实例
+      // ! 创建组件的 Vue 实例 -> 通过 VNode
       const child = (vnode.componentInstance = createComponentInstanceForVnode(
         vnode,
         activeInstance
@@ -100,7 +100,7 @@ const componentVNodeHooks = {
 
 const hooksToMerge = Object.keys(componentVNodeHooks)
 
-// ! 创建组件方法
+// ! 创建组件方法 -> 生成 VNode
 export function createComponent(
   Ctor: Class<Component> | Function | Object | void,
   data: ?VNodeData,
@@ -112,10 +112,10 @@ export function createComponent(
     return
   }
 
-  const baseCtor = context.$options._base
+  const baseCtor = context.$options._base // ! Vue 构造函数
 
   // plain options object: turn it into a constructor
-  // ! ① 构造子类构造函数 使用 extend 扩展
+  // ! ① 构造子类构造函数 -> 使用 extend 扩展选项
   if (isObject(Ctor)) {
     Ctor = baseCtor.extend(Ctor)
   }
@@ -130,7 +130,7 @@ export function createComponent(
   }
 
   // async component
-  // ! 异步组件函数
+  // ! 异步组件函数 -> 一开始 cid === undefined
   let asyncFactory
   if (isUndef(Ctor.cid)) {
     asyncFactory = Ctor
@@ -188,11 +188,12 @@ export function createComponent(
 
   // return a placeholder vnode
   const name = Ctor.options.name || tag
-  // ! ③ 实例化 VNode
+
+  // ! ③ 生成 VNode 实例并返回
   const vnode = new VNode(
     `vue-component-${Ctor.cid}${name ? `-${name}` : ''}`,
     data,
-    undefined, // ! 组件没有 children 元素
+    undefined, // ! 组件的 VNode 没有 children
     undefined,
     undefined,
     context,
@@ -211,14 +212,14 @@ export function createComponent(
   return vnode
 }
 
-// ! 创建组件的 Vue 实例方法
+// ! 创建组件的 Vue 实例方法 -> 通过 VNode
 export function createComponentInstanceForVnode(
   vnode: any, // we know it's MountedComponentVNode but flow doesn't
   parent: any // activeInstance in lifecycle state
 ): Component {
-  // ! 组件间合并配置
+  // ! 合并配置
   const options: InternalComponentOptions = {
-    _isComponent: true, // ! 是否是组件
+    _isComponent: true, // ! 是否是组件 -> 组件标识
     _parentVnode: vnode,
     parent // ! 当前激活的组件实例
   }
@@ -233,19 +234,22 @@ export function createComponentInstanceForVnode(
   return new vnode.componentOptions.Ctor(options)
 }
 
+// ! 安装组件钩子的方法
 function installComponentHooks(data: VNodeData) {
   const hooks = data.hook || (data.hook = {})
   for (let i = 0; i < hooksToMerge.length; i++) {
     const key = hooksToMerge[i]
     const existing = hooks[key]
     const toMerge = componentVNodeHooks[key]
+    // ! 已经存在的钩子和需要合并的钩子不相同时，且已经存在的钩子还没有合并
+    // ! 如果存在钩子进行合并，不存在钩子赋值为需要合并的钩子
     if (existing !== toMerge && !(existing && existing._merged)) {
-      hooks[key] = existing ? mergeHook(toMerge, existing) : toMerge // ! 钩子存在，合并钩子
+      hooks[key] = existing ? mergeHook(toMerge, existing) : toMerge
     }
   }
 }
 
-// ! 合并钩子，依次执行
+// ! 合并执行钩子 -> 依次执行钩子：先执行需要合并的钩子，再执行原先的钩子
 function mergeHook(f1: any, f2: any): Function {
   const merged = (a, b) => {
     // flow complains about extra args which is why we use any
