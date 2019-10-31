@@ -3,9 +3,10 @@
 import { cached } from 'shared/util'
 import { parseFilters } from './filter-parser'
 
-const defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g // ! 插值符 {{}}
+const defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g // ! 默认分隔符 {{ }}
 const regexEscapeRE = /[-.*+?^${}()|[\]\/\\]/g
 
+// ! 创建分隔符正则
 const buildRegex = cached(delimiters => {
   const open = delimiters[0].replace(regexEscapeRE, '\\$&')
   const close = delimiters[1].replace(regexEscapeRE, '\\$&')
@@ -17,10 +18,10 @@ type TextParseResult = {
   tokens: Array<string | { '@binding': string }>
 }
 
-// ! 文本解析的函数
+// ! 文本解析的方法
 export function parseText(
   text: string,
-  delimiters?: [string, string]
+  delimiters?: [string, string] // ! 自定义分隔符 -> [open, close]
 ): TextParseResult | void {
   const tagRE = delimiters ? buildRegex(delimiters) : defaultTagRE
   if (!tagRE.test(text)) {
@@ -31,24 +32,25 @@ export function parseText(
   let lastIndex = (tagRE.lastIndex = 0)
   let match, index, tokenValue
   while ((match = tagRE.exec(text))) {
-    index = match.index
+    index = match.index // ! 最左边 { 的索引值
     // push text token
     if (index > lastIndex) {
-      rawTokens.push((tokenValue = text.slice(lastIndex, index)))
-      tokens.push(JSON.stringify(tokenValue))
+      rawTokens.push((tokenValue = text.slice(lastIndex, index))) // ！ 存储截取分隔符左边的普通文本
+      tokens.push(JSON.stringify(tokenValue)) // !
     }
     // tag token
-    const exp = parseFilters(match[1].trim())
-    tokens.push(`_s(${exp})`)
+    const exp = parseFilters(match[1].trim()) // ! 获取表达式
+    tokens.push(`_s(${exp})`) // ! 拼接 _s -> 后面转函数时使用这个函数解析表达式
     rawTokens.push({ '@binding': exp })
-    lastIndex = index + match[0].length
+    lastIndex = index + match[0].length // ! 更新值 -> 右移，前进到这轮的普通文本和匹配的值后面
   }
+  // ! 循环结束后，还有剩余的普通文本无法匹配时，把它们放入到 tokens 中
   if (lastIndex < text.length) {
     rawTokens.push((tokenValue = text.slice(lastIndex)))
     tokens.push(JSON.stringify(tokenValue))
   }
   return {
-    expression: tokens.join('+'),
+    expression: tokens.join('+'), // ! 表达式使用 + 拼接在一起
     tokens: rawTokens
   }
 }

@@ -2,10 +2,12 @@
 
 import { cached, extend, toObject } from 'shared/util'
 
+// ! 解析 style 内容
 export const parseStyleText = cached(function (cssText) {
   const res = {}
-  const listDelimiter = /;(?![^(]*\))/g
+  const listDelimiter = /;(?![^(]*\))/g // ! 分号匹配正则 -> 不匹配小括号的分号
   const propertyDelimiter = /:(.+)/
+  // ! 分号分隔列表，然后遍历，冒号分隔属性
   cssText.split(listDelimiter).forEach(function (item) {
     if (item) {
       const tmp = item.split(propertyDelimiter)

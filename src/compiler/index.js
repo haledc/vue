@@ -16,7 +16,7 @@ function baseCompile(
     optimize(ast, options) // ! 优化语法树 (不同平台不一样)
   }
 
-  const code = generate(ast, options) // ! 生成代码, AST => code (不同平台不一样)
+  const code = generate(ast, options) // ! 生成代码, AST -> code (不同平台不一样)
 
   return {
     ast,

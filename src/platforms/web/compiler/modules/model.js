@@ -23,6 +23,8 @@ import {
   createASTElement
 } from 'compiler/parser/index'
 
+// ! 编译前置处理 -> 处理使用了 v-model 且绑定 type 的 input 元素
+// ! 分别生成三种不同类型的 input 元素 -> checkbox radio others
 function preTransformNode (el: ASTElement, options: CompilerOptions) {
   if (el.tag === 'input') {
     const map = el.attrsMap
@@ -39,12 +41,12 @@ function preTransformNode (el: ASTElement, options: CompilerOptions) {
     }
 
     if (typeBinding) {
-      const ifCondition = getAndRemoveAttr(el, 'v-if', true)
-      const ifConditionExtra = ifCondition ? `&&(${ifCondition})` : ``
-      const hasElse = getAndRemoveAttr(el, 'v-else', true) != null
-      const elseIfCondition = getAndRemoveAttr(el, 'v-else-if', true)
+      const ifCondition = getAndRemoveAttr(el, 'v-if', true) // ！ 获取 v-if 的值
+      const ifConditionExtra = ifCondition ? `&&(${ifCondition})` : `` 
+      const hasElse = getAndRemoveAttr(el, 'v-else', true) != null // ! 是否使用了 v-else
+      const elseIfCondition = getAndRemoveAttr(el, 'v-else-if', true) // ! 获取 v-else-if 的值
       // 1. checkbox
-      const branch0 = cloneASTElement(el)
+      const branch0 = cloneASTElement(el) // ! 克隆出一个全新的 AST
       // process for on the main node
       processFor(branch0)
       addRawAttr(branch0, 'type', 'checkbox')
@@ -85,6 +87,7 @@ function preTransformNode (el: ASTElement, options: CompilerOptions) {
   }
 }
 
+// ! 克隆 AST 元素
 function cloneASTElement (el) {
   return createASTElement(el.tag, el.attrsList.slice(), el.parent)
 }

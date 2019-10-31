@@ -245,7 +245,7 @@ export function parseHTML(html, options) {
     html = html.substring(n)
   }
 
-  // ! 解析开始标签的函数 <xxx>，如 <div> <br/>  => 生成匹配结果 match
+  // ! 解析开始标签的函数 <xxx>，如 <div> <br/>  -> 生成匹配结果 match
   function parseStartTag() {
     const start = html.match(startTagOpen) // ! 匹配正则确认是开始标签
     if (start) {
@@ -279,7 +279,7 @@ export function parseHTML(html, options) {
     }
   }
 
-  // ! 处理开始标签的函数 => 处理匹配结果 match
+  // ! 处理开始标签的函数 -> 处理匹配结果 match -> 把一些数据传给 options.start 处理
   function handleStartTag(match) {
     const tagName = match.tagName // ! 标签名
     const unarySlash = match.unarySlash // ! 获取到的 / 的值
@@ -302,7 +302,8 @@ export function parseHTML(html, options) {
     // ! 遍历标签属性
     for (let i = 0; i < l; i++) {
       const args = match.attrs[i] // ! 获取匹配到属性结果
-      const value = args[3] || args[4] || args[5] || '' // ! 提取属性的值，可能是第三、四、五个捕获组的值，都没有值为空字符串
+      // ! 提取属性的值，可能是第三、四、五个捕获组的值，如果都没有值为空字符串
+      const value = args[3] || args[4] || args[5] || ''
       const shouldDecodeNewlines =
         tagName === 'a' && args[1] === 'href'
           ? options.shouldDecodeNewlinesForHref
@@ -324,8 +325,8 @@ export function parseHTML(html, options) {
         tag: tagName,
         lowerCasedTag: tagName.toLowerCase(),
         attrs: attrs,
-        start: match.start,
-        end: match.end
+        start: match.start, // ! 标签的开始索引
+        end: match.end // ! 标签的结束索引
       })
       lastTag = tagName // ! lastTag 赋值为压入栈的标签的标签名，即栈顶元素的标签名
     }
@@ -335,7 +336,7 @@ export function parseHTML(html, options) {
     }
   }
 
-  // ! 解析闭合标签的函数 </xxx>，如 </div> </span>
+  // ! 解析闭合标签的函数 </xxx>，如 </div> </span> -> 把一些数据传给 options.start 和 options.end 处理
   function parseEndTag(tagName, start, end) {
     let pos, lowerCasedTagName
     if (start == null) start = index

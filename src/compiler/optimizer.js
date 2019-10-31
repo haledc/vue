@@ -17,7 +17,7 @@ const genStaticKeysCached = cached(genStaticKeys)
  * 1. Hoist them into constants, so that we no longer need to
  *    create fresh nodes for them on each re-render;
  * 2. Completely skip them in the patching process.
- * ! AST 优化，判断是否是静态节点或者静态根，这些节点不会发现变化，不用进行对比
+ * ! AST 优化 -> 判断是否是静态节点或者静态根，这些节点不会发现变化，不用进行对比
  */
 export function optimize(root: ?ASTElement, options: CompilerOptions) {
   if (!root) return
@@ -36,9 +36,9 @@ function genStaticKeys(keys: string): Function {
   )
 }
 
-// ! 标记静态节点的函数
+// ! 标记静态节点的方法
 function markStatic(node: ASTNode) {
-  node.static = isStatic(node) // ! 判断静态节点
+  node.static = isStatic(node) // ! 判断是否是静态节点
   // ! 节点是普通元素
   if (node.type === 1) {
     // do not make component slot content static. this avoids
@@ -63,10 +63,10 @@ function markStatic(node: ASTNode) {
       }
     }
 
-    // ! 有 if 时，递归
+    // ! 有 ifConditions 属性时，递归
     if (node.ifConditions) {
       for (let i = 1, l = node.ifConditions.length; i < l; i++) {
-        const block = node.ifConditions[i].block // ! 对应的 AST 节点
+        const block = node.ifConditions[i].block // ! 获取对应条件的的元素
         markStatic(block)
         if (!block.static) {
           node.static = false
@@ -78,7 +78,7 @@ function markStatic(node: ASTNode) {
 
 // ! 标记静态根的函数
 function markStaticRoots(node: ASTNode, isInFor: boolean) {
-  // ! 节点是普通元素
+  // ! 节点是标签元素
   if (node.type === 1) {
     if (node.static || node.once) {
       node.staticInFor = isInFor
@@ -89,7 +89,8 @@ function markStaticRoots(node: ASTNode, isInFor: boolean) {
     if (
       node.static && // ! 本身是静态节点
       node.children.length && // ! 子节点也是静态节点
-      !(node.children.length === 1 && node.children[0].type === 3) // ! 子节点的长度不能为 1 且不能是一个纯文本
+      // ! 子节点的长度不能为 1 且第一个子节点不能是一个纯文本或者注释节点
+      !(node.children.length === 1 && node.children[0].type === 3)
     ) {
       node.staticRoot = true
       return
@@ -97,12 +98,14 @@ function markStaticRoots(node: ASTNode, isInFor: boolean) {
       node.staticRoot = false
     }
 
-    // ! 同静态节点逻辑，下同
+    // ! children 属性同静态节点逻辑
     if (node.children) {
       for (let i = 0, l = node.children.length; i < l; i++) {
         markStaticRoots(node.children[i], isInFor || !!node.for)
       }
     }
+
+    // ! ifConditions 属性同静态节点逻辑
     if (node.ifConditions) {
       for (let i = 1, l = node.ifConditions.length; i < l; i++) {
         markStaticRoots(node.ifConditions[i].block, isInFor)
@@ -111,31 +114,34 @@ function markStaticRoots(node: ASTNode, isInFor: boolean) {
   }
 }
 
-// ! 判断静态节点的函数
+// ! 判断是不是静态节点的方法
 function isStatic(node: ASTNode): boolean {
-  // ! type 2 是表达式， 不是静态节点
+  // ! type 2 是含有字面量表达式的文本节点， 一定不是静态节点
   if (node.type === 2) {
     // expression
     return false
   }
 
-  // ! type 3 是纯文本， 是静态节点
+  // ! type 3 是纯文本或者注释节点， 一定是静态节点
   if (node.type === 3) {
     // text
     return true
   }
 
-  // ! type 1 是普通元素
+  // ! type 1 是标签节点
+  // ! 使用了 v-pre 指令或者是 pre 标签
+  // ! 没有绑定属性 && 没有使用 v-if &&  没有使用 v-for && 不是内置标签(slot, component) &&
+  // ！是平台的保留标签（不是组件） && 不是带有 v-for 的 template 标签 && 所有属性是静态属性
   return !!(
-    node.pre || // ! 使用 v-pre 是静态的
+    node.pre ||
     (!node.hasBindings && // no dynamic bindings
     !node.if &&
     !node.for && // not v-if or v-for or v-else
     !isBuiltInTag(node.tag) && // not a built-in
-    isPlatformReservedTag(node.tag) && // ! not a component 是保留的标签
-    !isDirectChildOfTemplateFor(node) && // ! 非带有 v-for 的 template 标签的直接子节点
+    isPlatformReservedTag(node.tag) && // not a component
+      !isDirectChildOfTemplateFor(node) &&
       Object.keys(node).every(isStaticKey))
-  ) // ! 节点的所有属性的 key 都满足静态 key
+  )
 }
 
 function isDirectChildOfTemplateFor(node: ASTElement): boolean {
