@@ -4,14 +4,14 @@ import { ASSET_TYPES } from 'shared/constants'
 import { defineComputed, proxy } from '../instance/state'
 import { extend, mergeOptions, validateComponentName } from '../util/index'
 
-// ! 初始化 extend， 添加 extend 方法
+// ! 初始化 extend 方法 -> 生成子类
 export function initExtend(Vue: GlobalAPI) {
   /**
    * Each instance constructor, including Vue, has a unique
    * cid. This enables us to create wrapped "child
    * constructors" for prototypal inheritance and cache them.
    */
-  Vue.cid = 0 
+  Vue.cid = 0
   let cid = 1 // ! 子类构造器 ID
 
   /**
@@ -20,7 +20,7 @@ export function initExtend(Vue: GlobalAPI) {
    */
   Vue.extend = function(extendOptions: Object): Function {
     extendOptions = extendOptions || {}
-    const Super = this // ! 根构造器 -> Vue
+    const Super = this // ! 父级
     const SuperId = Super.cid
     const cachedCtors = extendOptions._Ctor || (extendOptions._Ctor = {}) // ! 缓存
     if (cachedCtors[SuperId]) {
@@ -32,14 +32,14 @@ export function initExtend(Vue: GlobalAPI) {
       validateComponentName(name)
     }
 
-    // ! 生成子类
+    // ! 生成子类构造函数
     const Sub = function VueComponent(options) {
       this._init(options) // ! 初始化子类
     }
-    Sub.prototype = Object.create(Super.prototype) // ! 继承根构造器 -> 原型连接
+    Sub.prototype = Object.create(Super.prototype) // ! 继承 -> 通过原型继承父级原型
     Sub.prototype.constructor = Sub
     Sub.cid = cid++
-    Sub.options = mergeOptions(Super.options, extendOptions) // ! 合并配置
+    Sub.options = mergeOptions(Super.options, extendOptions) // ! 合并父级配置
     Sub['super'] = Super // ! 存储父级
 
     // For props and computed properties, we define the proxy getters on
