@@ -22,7 +22,7 @@ let uid = 0
  * A watcher parses an expression, collects dependencies,
  * and fires callback when the expression value changes.
  * This is used for both the $watch() api and directives.
- * ! 观察者
+ * ! 观察者（依赖）
  */
 export default class Watcher {
   vm: Component
@@ -61,7 +61,7 @@ export default class Watcher {
       this.user = !!options.user // ! 是否是开发者定义的，主要指 watch $watch 中自定义的函数
       this.lazy = !!options.lazy // ! 是否开启懒观察，专为计算属性设置
       this.sync = !!options.sync // ! 是否同步求值
-      this.before = options.before // ! 更新之前调用的钩子函数，比如调用 beforeUpdate 钩子函数 
+      this.before = options.before // ! 更新之前调用的钩子函数，比如调用 beforeUpdate 钩子函数
     } else {
       this.deep = this.user = this.lazy = this.sync = false // ! 默认值为 false
     }

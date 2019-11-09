@@ -230,7 +230,7 @@ export function set(target: Array<any> | Object, key: any, val: any): any {
   // ! key 已经存在对象 target 且不在它的原型中时
   if (key in target && !(key in Object.prototype)) {
     target[key] = val // ! 直接修改原来的值，会自动触发 setter
-    return val 
+    return val
   }
 
   // ! 获取原对象的 __ob__ 属性

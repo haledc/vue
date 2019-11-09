@@ -4,14 +4,14 @@ import { _Set as Set, isObject } from '../util/index'
 import type { SimpleSet } from '../util/index'
 import VNode from '../vdom/vnode'
 
-const seenObjects = new Set() // ! 存储 id 值的集合
+const seenObjects = new Set() // ! 存储 depId 的集合
 
 /**
  * Recursively traverse an object to evoke all converted
  * getters, so that every nested property inside the object
  * is collected as a "deep" dependency.
- * ! 递归遍历，用于深度观察
- * ! 对子对象的访问，会触发它们的 getter 过程，这样就可以收集到所有的依赖
+ * ! 深度监听
+ * ! 对子对象的访问，会触发它们的 getter 收集依赖，这样就可以收集所有的依赖
  */
 export function traverse(val: any) {
   _traverse(val, seenObjects)

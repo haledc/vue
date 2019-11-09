@@ -9,7 +9,7 @@ let uid = 0
 /**
  * A dep is an observable that can have multiple
  * directives subscribing to it.
- * ! 订阅器 依赖收集
+ * ! 订阅器 -> 依赖和触发收集
  */
 export default class Dep {
   static target: ?Watcher
