@@ -35,12 +35,12 @@ export function parseText(
     index = match.index // ! 最左边 { 的索引值
     // push text token
     if (index > lastIndex) {
-      rawTokens.push((tokenValue = text.slice(lastIndex, index))) // ！ 存储截取分隔符左边的普通文本
+      rawTokens.push((tokenValue = text.slice(lastIndex, index))) // ! 存储截取分隔符左边的普通文本
       tokens.push(JSON.stringify(tokenValue)) // !
     }
     // tag token
-    const exp = parseFilters(match[1].trim()) // ! 获取表达式
-    tokens.push(`_s(${exp})`) // ! 拼接 _s -> 后面转函数时使用这个函数解析表达式
+    const exp = parseFilters(match[1].trim()) // ! 获取分隔符里面的表达式
+    tokens.push(`_s(${exp})`) // ! 拼接 _s -> 后面生成函数代码时使用这个函数解析表达式
     rawTokens.push({ '@binding': exp })
     lastIndex = index + match[0].length // ! 更新值 -> 右移，前进到这轮的普通文本和匹配的值后面
   }
