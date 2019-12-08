@@ -207,7 +207,7 @@ export function mountComponent(
   // ! 生成观察者实例
   new Watcher(
     vm,
-    updateComponent, // ! 更新组件的函数，执行时 => 执行 vm.$options.render => getter => 收集依赖
+    updateComponent, // ! 更新组件的函数，执行时 -> 执行 vm.$options.render -> getter -> 收集依赖
     noop,
     {
       before() {

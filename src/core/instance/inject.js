@@ -22,7 +22,7 @@ export function initInjections(vm: Component) {
     Object.keys(result).forEach(key => {
       /* istanbul ignore else */
       if (process.env.NODE_ENV !== 'production') {
-        // ! 实例代理 key，并把 key 变成响应式，另外不能修改 inject 的数据，否则报错
+        // ! 实例代理 key，另外不能修改 inject 的数据，否则报错
         defineReactive(vm, key, result[key], () => {
           warn(
             `Avoid mutating an injected value directly since the changes will be ` +
@@ -32,7 +32,7 @@ export function initInjections(vm: Component) {
           )
         })
       } else {
-        defineReactive(vm, key, result[key]) // ! 实例代理 key，并把 key 变成响应式
+        defineReactive(vm, key, result[key]) // ! 实例代理 key
       }
     })
     toggleObserving(true) // ! 恢复监听

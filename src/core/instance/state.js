@@ -73,7 +73,7 @@ function initProps(vm: Component, propsOptions: Object) {
   const isRoot = !vm.$parent
 
   // root instance props should be converted
-  // ! 不是根组件时，不进行深度监听，因为可能传过来的引用类型的值已经是响应式数据
+  // ! 不是根组件时，不进行监听，因为可能传过来的引用类型的值已经是响应式数据
   if (!isRoot) {
     toggleObserving(false) // ! 关闭监听开关 shouldObserve = false
   }
@@ -262,7 +262,7 @@ export function defineComputed(
       )
     }
   }
-  Object.defineProperty(target, key, sharedPropertyDefinition)
+  Object.defineProperty(target, key, sharedPropertyDefinition) // ! 把计算属性代理到实例对象中
 }
 
 // ! 创建计算属性 getter 的函数，需要根据 dirty 更新值和收集依赖

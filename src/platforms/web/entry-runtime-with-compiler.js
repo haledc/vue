@@ -103,7 +103,7 @@ Vue.prototype.$mount = function(
       }
     }
   }
-  return mount.call(this, el, hydrating) // ! 调用 runtime mount 函数
+  return mount.call(this, el, hydrating) // ! 调用 runtime $mount 方法
 }
 
 /**

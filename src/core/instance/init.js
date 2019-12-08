@@ -69,7 +69,7 @@ export function initMixin(Vue: Class<Component>) {
       measure(`vue ${vm._name} init`, startTag, endTag)
     }
 
-    // ! 如果有 el，就挂载在该元素上
+    // ! 如果设置了 el，就把实例对象挂载在该元素上
     if (vm.$options.el) {
       vm.$mount(vm.$options.el)
     }
@@ -100,7 +100,7 @@ export function initInternalComponent(
   }
 }
 
-// ! 解析 Vue 初始化时构造函数的 options (注意区别 Vue 的构造函数和子类（Vue.extend()）的构造函数)
+// ! 解析 Vue 初始化时构造函数的 options (注意区别 Vue 的构造函数和子类（Vue.extend()）
 export function resolveConstructorOptions(Ctor: Class<Component>) {
   let options = Ctor.options
   if (Ctor.super) {
@@ -122,7 +122,7 @@ export function resolveConstructorOptions(Ctor: Class<Component>) {
       }
     }
   }
-  return options // ! 返回 options
+  return options
 }
 
 function resolveModifiedOptions(Ctor: Class<Component>): ?Object {
